@@ -18,12 +18,12 @@ nodejs v14.15.3 and npm v6.14.10 (compatibility of lower version hasn't been tes
 ```
 npm install
 ```
-<<<<<<< Updated upstream
+
 ##### Compiles and hot-reloads for development
 =======
 nodejs and npm are required. The version I used are v14.15.4 and v6.14.10. Other version haven't been tested.
+
 ### Compiles and hot-reloads for development
->>>>>>> Stashed changes
 ```
 npm run serve
 ```
