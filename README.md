@@ -1,4 +1,8 @@
+<<<<<<< Updated upstream
 ## UI for project AGCCS-CTRL22
+=======
+# vue-FGDES-ui
+>>>>>>> Stashed changes
 
 This programm aims to develop the user interface for the Combined Charging System from project AGCCS. A supporting server program is needed for regular operation.
 
@@ -18,7 +22,12 @@ nodejs v14.15.3 and npm v6.14.10 (compatibility of lower version hasn't been tes
 ```
 npm install
 ```
+<<<<<<< Updated upstream
 ##### Compiles and hot-reloads for development
+=======
+nodejs and npm are required. The version I used are v14.15.4 and v6.14.10. Other version haven't been tested.
+### Compiles and hot-reloads for development
+>>>>>>> Stashed changes
 ```
 npm run serve
 ```
@@ -31,3 +40,12 @@ Then copy the folder dist into the server folder.
 ```
 npm run lint
 ```
+<<<<<<< Updated upstream
+=======
+
+### Customize configuration
+See [Configuration Reference](https://cli.vuejs.org/config/).
+
+### Requirement
+Local api-server and mysql-database are required to run this user interface, which are in the express-api-server.
+>>>>>>> Stashed changes
