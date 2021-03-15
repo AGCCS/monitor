@@ -113,7 +113,7 @@
                 </el-button>
               </el-tooltip>
               <!-- Node stops blinking to find the node -->
-              <el-tooltip effect="dark" content="Blink" placement="top">
+              <el-tooltip effect="dark" content="No Blink" placement="top">
                 <el-button type="info"
                            icon="el-icon-s-opportunity"
                            size="mini"
@@ -234,7 +234,7 @@ export default {
   },
   created () {
     this.getNodeStatusList()
-    // this.keepAlive()
+    this.keepAlive()
   },
   methods: {
     // get the informationslist of mesh

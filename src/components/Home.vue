@@ -51,10 +51,16 @@
                 <i class="el-icon-user-solid"></i>
                 <span slot="title">user setting</span>
             </el-menu-item>
+
             <el-menu-item @click="showMeshDialog" :index="activePath">
               <i class="el-icon-setting"></i>
               <span slot="title">mesh setting</span>
             </el-menu-item>
+
+          <el-menu-item @click="initDialogVisible = true" :index="activePath">
+          <i class="el-icon-s-release"></i>
+              <span slot="title">mesh init</span>
+          </el-menu-item>
           </el-submenu>
         </el-menu>
 
@@ -74,7 +80,7 @@
             <el-form-item label="new password" prop="newPWD">
               <el-input v-model="pwdForm.newPWD" show-password clearable></el-input>
             </el-form-item>
-            <el-form-item label="new password" prop="checkNewPWD">
+            <el-form-item label="confirm password" prop="checkNewPWD">
               <el-input v-model="pwdForm.checkNewPWD" type="password" clearable></el-input>
             </el-form-item>
           </el-form>
@@ -100,6 +106,37 @@
           <span slot="footer" class="dialog-footer">
             <el-button @click="meshDialogVisible = false">cancel</el-button>
             <el-button type="primary" @click="meshDialogConfirm">save</el-button>
+          </span>
+        </el-dialog>
+
+        <!-- Messagebox for initialize the mesh -->
+        <el-dialog title="Mesh Initialization"
+                   :visible.sync="initDialogVisible"
+                   width="235px"
+                   class="initDialog"
+                   @close="initDialogClosed">
+              <el-dialog width="330px"
+                         title="Warning"
+                         :visible.sync="initConfirmVisible"
+                         append-to-body>
+                <div style="color: #E6A23C; margin-bottom:5%">Please enter your username and password to continue the initialization.</div>
+                <el-form :model="pwdForm" :rules="pwdFormRules" ref="initFormRef" label-width="100px" class="pwdForm" status-icon:true>
+                  <el-form-item label="username" prop="username">
+                    <el-input v-model="pwdForm.username"></el-input>
+                  </el-form-item>
+                  <el-form-item label="password" prop="password">
+                    <el-input v-model="pwdForm.password" show-password clearable></el-input>
+                  </el-form-item>
+                </el-form>
+                <span slot="footer" class="dialog-footer">
+                  <el-button @click="initConfirmVisible = false">cancel</el-button>
+                  <el-button type="primary" @click="initDialogConfirm">confirm</el-button>
+                </span>
+              </el-dialog>
+          <div style="color: #E6A23C;">Are you sure to continue the initialization</div>
+          <span slot="footer" class="dialog-footer">
+            <el-button @click="initDialogVisible = false">cancel</el-button>
+            <el-button type="primary" @click="initConfirmVisible = true; initDialogVisible = false">confirm</el-button>
           </span>
         </el-dialog>
 
@@ -184,7 +221,9 @@ export default {
       meshForm: {},
       meshFormRules: {
         wholeMax: [{ validator: checkCurrentValue, trigger: 'blur' }]
-      }
+      },
+      initDialogVisible: false,
+      initConfirmVisible: false
     }
   },
   created () {
@@ -258,6 +297,28 @@ export default {
           return this.$message.error('Failed to change the setting')
         }
         this.$message.success('The setting of mesh has been successfully modified！')
+      })
+    },
+
+    // functions for the dialog of mesh initialization
+    initDialogClosed () {
+      this.$refs.initFormRef.resetFields()
+    },
+    initDialogConfirm () {
+      this.$refs.initFormRef.validate(async valid => {
+        if (!valid) return
+        const { data: res } = await this.$http.post('users/login',
+          {
+            username: this.pwdForm.username,
+            password: this.pwdForm.password
+          })
+        this.initDialogVisible = false
+        if (res.meta.status === 400) {
+          return this.$message.error('wrong user information')
+        }
+        const { data: res1 } = await this.$http.post('mesh/init')
+        if (res1.meta.status !== 202) return
+        this.$message.success('The name of the node has been successfully modified！')
       })
     }
   }

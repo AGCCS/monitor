@@ -69,7 +69,7 @@ export default {
   },
   created () {
     this.getMeshInfo()
-    // this.keepAlive()
+    this.keepAlive()
   },
   methods: {
     // get the setting of mesh
