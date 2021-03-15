@@ -1,7 +1,7 @@
 <template>
   <el-container class="home-container">
     <el-header>
-    Loadstation console
+    AGCCS-CTRL22 Console
     <el-button type="info" @click="logout">log out</el-button>
     </el-header>
     <el-container>
@@ -21,14 +21,25 @@
           <!-- menu 1st level-->
           <el-menu-item @click="saveNavState('/default')"
                         index="default">
-            <i class="el-icon-monitor"></i>
-            <span slot="title">Center</span>
+            <i class="el-icon-s-home"></i>
+            <span slot="title">Mesh</span>
           </el-menu-item>
-          <el-menu-item @click="saveNavState('/nodes')"
-                        index="nodes">
-            <i class="el-icon-document"></i>
-            <span slot="title">Node Status</span>
-          </el-menu-item>
+          <el-submenu class="nodesMenu">
+            <template slot="title">
+              <i class="el-icon-menu"></i>
+              <span>Nodes</span>
+            </template>
+
+            <!-- menu 2nd level-->
+            <el-menu-item @click="saveNavState('/nodesStatus')" index="nodesStatus">
+                <i class="el-icon-monitor"></i>
+                <span slot="title">Nodes Status</span>
+            </el-menu-item>
+            <el-menu-item @click="saveNavState('/nodesInfo')" index="nodesInfo">
+              <i class="el-icon-document"></i>
+              <span slot="title">Nodes Info</span>
+            </el-menu-item>
+          </el-submenu>
           <el-submenu class="settingMenu" :index="activePath">
             <template slot="title">
               <i class="el-icon-s-tools"></i>
@@ -276,6 +287,14 @@ export default {
       }
     }
   }
+  /deep/ .el-submenu__title {
+  padding-left: 10px !important;
+  max-width: 150px !important;
+  padding-right: 0px !important;
+  }
+  /deep/ .el-tooltip {
+  padding-left: 10px !important;
+  }
   .el-main {
     background-color: #EAEDF1;
   }
@@ -287,21 +306,5 @@ export default {
     text-align: center;
     letter-spacing: 0.2em;
     cursor: pointer;
-  }
-</style>
-<style>
-  .settingMenu /deep/ .el-submenu__title {
-    padding-left: 10px !important;
-    padding-right: 0px !important;
-  }
-  .verticalMenu /deep/ .el-tooltip {
-    padding-left: 10px !important;
-    padding-right: 0px !important;
-  }
-  .el-submenu .el-menu-item {
-    min-width: 48px !important;
-  }
-  .verticalMenu.el-menu--collapse.el-menu {
-    width: 48px !important;
   }
 </style>

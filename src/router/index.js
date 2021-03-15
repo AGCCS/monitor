@@ -2,7 +2,8 @@ import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Login from '../components/Login.vue'
 import Home from '../components/Home.vue'
-import nodeStatus from '../components/nodestatus/nodeStatus.vue'
+import nodeStatus from '../components/nodes/nodeStatus.vue'
+import nodesInfo from '../components/nodes/nodesInfo.vue'
 import Mesh from '../components/mesh/Mesh.vue'
 // import Dashboard from '../components/dashboard/dashboard.vue'
 import Setting from '../components/settings/Setting.vue'
@@ -19,8 +20,8 @@ const router = new VueRouter({
       redirect: '/default',
       children: [
         { path: '/default', component: Mesh },
-        { path: '/nodes', component: nodeStatus },
-        // { path: '/reports', component: Dashboard },
+        { path: '/nodesStatus', component: nodeStatus },
+        { path: '/nodesInfo', component: nodesInfo },
         { path: '/setting', component: Setting }
       ]
     }

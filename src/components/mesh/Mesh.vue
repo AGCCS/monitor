@@ -1,7 +1,5 @@
 <template>
   <div>
-    <h3>
-    </h3>
     <!-- breadcrumb Navigation for several nodes-->
     <el-breadcrumb separator="/">
       <el-breadcrumb-item :to="{ path: '/home' }">Center</el-breadcrumb-item>
@@ -12,9 +10,9 @@
     <el-card class="box-card">
       <div slot="header" class="clearfix">
         <el-row>
-          <el-col :span="10">Control Center</el-col>
+          <el-col :span="10">Mesh Monitor</el-col>
           <el-col :span="6" :offset="8">
-            <el-button type="primary" plain @click="scanMesh">Scan Mesh</el-button>
+            <!-- <el-button type="primary" plain @click="scanMesh">Scan Mesh</el-button> -->
           </el-col>
         </el-row>
       </div>
@@ -71,7 +69,7 @@ export default {
   },
   created () {
     this.getMeshInfo()
-    this.keepAlive()
+    // this.keepAlive()
   },
   methods: {
     // get the setting of mesh
@@ -105,12 +103,12 @@ export default {
       setInterval(() => {
         this.getMeshInfo()
       }, 1000)
-    },
-    async scanMesh () {
-      const { data: res } = await this.$http.get('mesh/init')
-      if (res.meta.status !== 200) return this.$message.error('Failed to scan mesh for new nodes!')
-      return this.$message.success('Begin to scan mesh for new nodes')
     }
+    // async scanMesh () {
+    //   const { data: res } = await this.$http.get('mesh/init')
+    //   if (res.meta.status !== 200) return this.$message.error('Failed to scan mesh for new nodes!')
+    //   return this.$message.success('Begin to scan mesh for new nodes')
+    // }
   }
 }
 </script>

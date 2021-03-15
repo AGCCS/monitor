@@ -23,12 +23,13 @@ import {
   TableColumn,
   Switch,
   Tooltip,
-  Popconfirm,
   Pagination,
   Dialog,
   Radio,
   RadioGroup,
-  Link
+  Link,
+  Checkbox,
+  CheckboxGroup
 } from 'element-ui'
 import lang from 'element-ui/lib/locale/lang/en'
 import locale from 'element-ui/lib/locale'
@@ -56,10 +57,11 @@ Vue.use(Table)
 Vue.use(TableColumn)
 Vue.use(Switch)
 Vue.use(Tooltip)
-Vue.use(Popconfirm)
 Vue.use(Pagination)
 Vue.use(Dialog)
 Vue.use(Radio)
 Vue.use(RadioGroup)
 Vue.use(Link)
+Vue.use(Checkbox)
+Vue.use(CheckboxGroup)
 Vue.prototype.$message = Message

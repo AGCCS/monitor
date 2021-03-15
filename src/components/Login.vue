@@ -56,8 +56,6 @@ export default {
         if (res.meta.status !== 200) return this.$message.error('Login failed')
         this.$message.success('login successful')
         window.sessionStorage.setItem('token', res.data.token) // get proper token for user
-        const { data: res2 } = await this.$http.get('mesh/init')
-        if (res2.meta.status !== 200) return this.$message.error('Failed to scan mesh for new nodes!')
         this.$router.push('home')
       })
     }

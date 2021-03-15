@@ -3,14 +3,14 @@
     <!-- breadcrumb Navigation for several nodes-->
     <el-breadcrumb separator="/">
       <el-breadcrumb-item :to="{ path: '/home' }">Center</el-breadcrumb-item>
-      <el-breadcrumb-item>Node Status</el-breadcrumb-item>
+      <el-breadcrumb-item>Nodes Status</el-breadcrumb-item>
     </el-breadcrumb>
 
     <!-- Card to show imformation and data from nodes-->
     <el-card class="box-card">
       <div slot="header" class="clearfix">
         <el-row>
-          <el-col :span="10">Center of node status</el-col>
+          <el-col :span="10">Status of nodes</el-col>
           <el-col :span="6" :offset="8">
           </el-col>
         </el-row>
@@ -18,14 +18,17 @@
 
       <!-- Table to show the details of nodes-->
       <template>
-        <el-table :data="NodeStatusList"
+        <el-table :data="NodeStatusList.slice((this.queryInfo.pagenum-1)*this.queryInfo.pagesize,
+                      this.queryInfo.pagenum*this.queryInfo.pagesize)"
                   border
                   stripe
                   style="width: 100%">
           <el-table-column type="index"
                            label="#">
           </el-table-column>
-          <el-table-column label="name">
+          <el-table-column label="name"
+                           sortable
+                           width="150">
             <template slot-scope="scope">
               <div>
                 <el-link><i class="el-icon-edit" @click="showNameDialog(scope.row.id)"></i></el-link>
@@ -35,23 +38,38 @@
           </el-table-column>
           <el-table-column prop="connect"
                            label="connection"
-                           width="100">
+                           :filters="[{text: 'connected', value: 1 }, {text: 'disconnected', value: 0 }]"
+                           :filter-method="filterHandler"
+                           sortable
+                           width="150">
+            <template slot-scope="scope">
+              <div align="center">
+                <el-button size="mini"
+                           circle
+                           :type="scope.row.connect? 'success': 'info'">
+                </el-button>
+              </div>
+            </template>
           </el-table-column>
           <el-table-column prop="workStatus"
                            label="status"
+                           sortable
                            width="100">
           </el-table-column>
           <el-table-column prop="Cur1"
                            sortable
-                           label="cur1 /A">
+                           label="cur1 /A"
+                           width="100">
           </el-table-column>
           <el-table-column prop="Cur2"
                            sortable
-                           label="cur2 /A">
+                           label="cur2 /A"
+                           width="100">
           </el-table-column>
           <el-table-column prop="Cur3"
                            sortable
-                           label="cur3 /A">
+                           label="cur3 /A"
+                           width="100">
           </el-table-column>
           <el-table-column prop="maxCur"
                            sortable
@@ -62,7 +80,7 @@
                            sortable
                            label="workmode">
           </el-table-column> -->
-          <el-table-column label="setting" width="100">
+          <el-table-column label="setting">
             <template slot-scope="scope">
 
               <!-- settings of node-->
@@ -81,7 +99,26 @@
                            icon="el-icon-video-play"
                            size="mini"
                            circle
-                           @click="pressButtonB(scope.row.macADR)">
+                           @click="pressButtonB(scope.row.macADR, scope.row.nodeName)">
+                </el-button>
+              </el-tooltip>
+
+              <!-- Node Blinks to find the node -->
+              <el-tooltip effect="dark" content="Blink" placement="top">
+                <el-button type="primary"
+                           icon="el-icon-s-opportunity"
+                           size="mini"
+                           circle
+                           @click="Blink(scope.row.macADR, scope.row.nodeName)">
+                </el-button>
+              </el-tooltip>
+              <!-- Node stops blinking to find the node -->
+              <el-tooltip effect="dark" content="Blink" placement="top">
+                <el-button type="info"
+                           icon="el-icon-s-opportunity"
+                           size="mini"
+                           circle
+                           @click="noBlink(scope.row.macADR, scope.row.nodeName)">
                 </el-button>
               </el-tooltip>
             </template>
@@ -103,10 +140,10 @@
     <!-- Messagebox for changing the name of nodes-->
     <el-dialog title="edit node name"
                :visible.sync="NameDialogVisible"
-               width="350px"
+               width="300px"
                class="NameDialog"
                @close="nameDialogClosed">
-      <el-form :model="nameForm" ref="nameFormRef" label-width="150px">
+      <el-form :model="nameForm" ref="nameFormRef" label-width="100px">
         <el-form-item label="Mac address" prop="macADR">
           <el-input v-model="nameForm.macADR" disabled></el-input>
         </el-form-item>
@@ -121,26 +158,28 @@
     </el-dialog>
 
     <!-- Messagebox for changing the settings of nodes-->
-    <el-dialog title="Settings of node"
+    <el-dialog :title="settingForm.nodeName? 'settings of '+settingForm.nodeName: 'settings of '+settingForm.macADR"
                :visible.sync="settingDialogVisible"
                width="300px"
                class="settingDialog"
                @close="settingDialogClosed">
       <el-form :model="settingForm" :rules="settingFormRules" ref="settingFormRef" label-width="100px" class="settingform">
-        <el-form-item label="workmode">
+        <el-form-item label="Workmode">
           <el-radio-group v-model="settingForm.workmode" size="small" @change="checkMode(settingForm.workmode)">
             <el-radio :label="'auto'">auto</el-radio>
             <el-radio :label="'manual'">manual</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="max current" prop="maxCur">
+        <el-form-item label="Max current" prop="maxCur">
           <el-input v-model="settingForm.maxCur" clearable maxlength="5" :disabled="isAuto">
             <template slot="append"><div style="width:0px">A</div></template>
           </el-input>
         </el-form-item>
-        <el-form-item label="phases" prop="Phases">
-          <el-input v-model.number="settingForm.Phases" clearable maxlength="5" :disabled="isAuto">
-          </el-input>
+        <el-form-item label="Phases">
+            <el-checkbox v-model="selAllPhases" @change="handleSelAllPhases" :disabled="isAuto">All</el-checkbox>
+            <el-checkbox-group v-model="selPhases" @change="handleSelPhases" :disabled="isAuto">
+              <el-checkbox v-for="phase in Phases" :label="phase" :key="phase">{{phase}}</el-checkbox>
+            </el-checkbox-group>
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
@@ -152,6 +191,7 @@
 </template>
 
 <script>
+const phasesOptions = [1, 2, 3]
 export default {
   data () {
     var checkCurrentValue = (rule, value, callback) => {
@@ -186,12 +226,15 @@ export default {
         maxCur: [
           { validator: checkCurrentValue, trigger: 'blur' }]
       },
-      isAuto: true // true: default workmode automatic. false: manual -> change setting allowed
+      isAuto: true, // true: default workmode automatic. false: manual -> change setting allowed
+      selAllPhases: true,
+      selPhases: [1, 2, 3],
+      Phases: phasesOptions
     }
   },
   created () {
     this.getNodeStatusList()
-    this.keepAlive()
+    // this.keepAlive()
   },
   methods: {
     // get the informationslist of mesh
@@ -201,12 +244,15 @@ export default {
         return this.$message.error('Failed to receive the data of nodes')
       }
       this.NodeStatusList = res.data
-      this.total = res.data.length
       for (let i = 0; i < this.NodeStatusList.length; i++) {
         if (!this.NodeStatusList[i].nodeName) {
           this.NodeStatusList[i].nodeName = this.NodeStatusList[i].macADR
         }
+        // if (!this.NodeStatusList[i].connect) {
+        //   this.NodeStatusList.splice(i, 1)
+        // }
       }
+      this.total = this.NodeStatusList.length
     },
 
     // change the size of pages
@@ -270,9 +316,9 @@ export default {
       if (res.meta.status !== 200) {
         return this.$message.error('Failed to read the information of node')
       }
-      if (!res.data.connect) {
-        return this.$message.error('No connection to the node')
-      }
+      // if (!res.data.connect) {
+      //   return this.$message.error('No connection to the node')
+      // }
       this.settingForm = res.data
       this.checkMode(this.settingForm.workmode)
       this.settingDialogVisible = true
@@ -308,11 +354,12 @@ export default {
         this.getNodeStatusList()
       }, 1000)
     },
-    async pressButtonB (macADR) {
+    async pressButtonB (macADR, nodeName) {
       const { data: res } = await this.$http.put('nodes/buttonB', { macADR: macADR })
       if (res.meta.status === 200) {
-        return this.$message.success('The setting of the node has been successfully modified！')
+        return this.$message.success('Button of node ' + nodeName + ' is remotely pressed.')
       }
+      return this.$message.error('Failed to control The node ' + nodeName + '.')
     },
     checkMode (workmode) {
       if (workmode === 'manual') {
@@ -320,6 +367,36 @@ export default {
       } else {
         this.isAuto = true
       }
+    },
+    handleSelAllPhases (val) {
+      this.selPhases = val ? phasesOptions : []
+      this.settingForm.Phases = val ? 123 : 0
+    },
+    handleSelPhases (val) {
+      const selRes = val.length
+      this.settingForm.Phases = 0
+      this.selAllPhases = selRes === this.Phases.length
+      for (let i = 0; i < this.selPhases.length; i++) {
+        this.settingForm.Phases = this.settingForm.Phases * 10 + this.selPhases[i]
+      }
+    },
+    filterHandler (value, row, column) {
+      const property = column.property
+      return row[property] === value
+    },
+    async Blink (macADR, nodeName) {
+      const { data: res } = await this.$http.put('nodes/Blink', { macADR: macADR })
+      if (res.meta.status === 200) {
+        return this.$message.success('The node ' + nodeName + ' blinks now.')
+      }
+      return this.$message.error('Failed to control The node ' + nodeName + '.')
+    },
+    async noBlink (macADR, nodeName) {
+      const { data: res } = await this.$http.put('nodes/noBlink', { macADR: macADR })
+      if (res.meta.status === 200) {
+        return this.$message.success('The node ' + nodeName + ' stops blinking now.')
+      }
+      return this.$message.error('Failed to control The node ' + nodeName + '.')
     }
   }
 }
