@@ -5,11 +5,11 @@
     <el-button type="info" @click="logout">log out</el-button>
     </el-header>
     <el-container>
-      <el-aside :width="isCollapse ? '48px' : '150px'">
+      <el-aside :width="isCollapse ? '48px' : '160px'" v-bind:class="CollapseClass">
         <div class="toggle-button" @click="togleCollapse" id="togle">
           &gt;&gt;&gt;
         </div>
-        <el-menu class="verticalMenu"
+        <el-menu class="verticalMainMenu"
                  background-color="#545c64"
                  text-color="#fff"
                  active-text-color="#409FFF"
@@ -20,11 +20,13 @@
                  default-active="1">
           <!-- menu 1st level-->
           <el-menu-item @click="saveNavState('/default')"
-                        index="default">
+                        index="default"
+                        class="meshMenu">
             <i class="el-icon-s-home"></i>
             <span slot="title">Mesh</span>
           </el-menu-item>
-          <el-submenu class="nodesMenu">
+
+          <el-submenu class="nodesMenu" index="nodes" :hide-timeout="100">
             <template slot="title">
               <i class="el-icon-menu"></i>
               <span>Nodes</span>
@@ -40,26 +42,49 @@
               <span slot="title">Nodes Info</span>
             </el-menu-item>
           </el-submenu>
-          <el-submenu class="settingMenu" :index="activePath">
+        </el-menu>
+
+        <el-menu class="verticalSettingMenu"
+                 background-color="#545c64"
+                 text-color="#fff"
+                 active-text-color="#fff"
+                 unique-opened
+                 :collapse="isCollapse"
+                 :collapse-transition="false"
+                 default-active="2">
+          <el-submenu class="userMenu" index="user" :hide-timeout="100">
+            <template slot="title">
+              <i class="el-icon-user-solid"></i>
+              <span>User</span>
+            </template>
+
+            <!-- menu 2nd level-->
+            <el-menu-item @click="pwdDialogVisible = true" index="PWD">
+                <i class="el-icon-user"></i>
+                <span slot="title">Change Password</span>
+            </el-menu-item>
+
+            <el-menu-item @click="createUserVisible = true" index="subUser">
+                <i class="el-icon-s-custom"></i>
+                <span slot="title">Create Subuser</span>
+            </el-menu-item>
+          </el-submenu>
+
+          <el-submenu class="settingMenu" index="setting" :hide-timeout="100">
             <template slot="title">
               <i class="el-icon-s-tools"></i>
               <span>Setting</span>
             </template>
 
             <!-- menu 2nd level-->
-            <el-menu-item @click="pwdDialogVisible = true" :index="activePath">
-                <i class="el-icon-user-solid"></i>
-                <span slot="title">user setting</span>
-            </el-menu-item>
-
-            <el-menu-item @click="showMeshDialog" :index="activePath">
+            <el-menu-item @click="showMeshDialog" index="meshSetting">
               <i class="el-icon-setting"></i>
-              <span slot="title">mesh setting</span>
+              <span slot="title">Mesh Setting</span>
             </el-menu-item>
 
-          <el-menu-item @click="initDialogVisible = true" :index="activePath">
+          <el-menu-item @click="initDialogVisible = true" index="meshInit">
           <i class="el-icon-s-release"></i>
-              <span slot="title">mesh init</span>
+              <span slot="title">Initialization</span>
           </el-menu-item>
           </el-submenu>
         </el-menu>
@@ -72,16 +97,16 @@
                    @close="pwdDialogClosed">
           <el-form :model="pwdForm" :rules="pwdFormRules" ref="pwdFormRef" label-width="150px" class="pwdForm" status-icon:true>
             <el-form-item label="username" prop="username">
-              <el-input v-model="pwdForm.username"></el-input>
+              <el-input v-model="pwdForm.username" maxlength="20" clearable></el-input>
             </el-form-item>
             <el-form-item label="origin password" prop="password">
-              <el-input v-model="pwdForm.password" show-password clearable></el-input>
+              <el-input v-model="pwdForm.password" maxlength="20" show-password clearable></el-input>
             </el-form-item>
             <el-form-item label="new password" prop="newPWD">
-              <el-input v-model="pwdForm.newPWD" show-password clearable></el-input>
+              <el-input v-model="pwdForm.newPWD" maxlength="20" show-password clearable></el-input>
             </el-form-item>
             <el-form-item label="confirm password" prop="checkNewPWD">
-              <el-input v-model="pwdForm.checkNewPWD" type="password" clearable></el-input>
+              <el-input v-model="pwdForm.checkNewPWD" maxlength="20" type="password" clearable></el-input>
             </el-form-item>
           </el-form>
           <span slot="footer" class="dialog-footer">
@@ -98,7 +123,7 @@
                    @close="meshDialogClosed">
           <el-form :model="meshForm" :rules="meshFormRules" ref="meshFormRef" label-width="120px" class="meshDialogForm">
             <el-form-item label="max Current" prop="wholeMax">
-              <el-input v-model="meshForm.wholeMax">
+              <el-input v-model="meshForm.wholeMax" maxlength="5" clearable>
                 <template slot="append"><div style="width:0px">A</div></template>
               </el-input>
             </el-form-item>
@@ -114,11 +139,12 @@
                    :visible.sync="initDialogVisible"
                    width="235px"
                    class="initDialog"
-                   @close="initDialogClosed">
+                   >
               <el-dialog width="330px"
                          title="Warning"
                          :visible.sync="initConfirmVisible"
-                         append-to-body>
+                         append-to-body
+                         @close="initConfirmClosed">
                 <div style="color: #E6A23C; margin-bottom:5%">Please enter your username and password to continue the initialization.</div>
                 <el-form :model="pwdForm" :rules="pwdFormRules" ref="initFormRef" label-width="100px" class="pwdForm" status-icon:true>
                   <el-form-item label="username" prop="username">
@@ -137,6 +163,48 @@
           <span slot="footer" class="dialog-footer">
             <el-button @click="initDialogVisible = false">cancel</el-button>
             <el-button type="primary" @click="initConfirmVisible = true; initDialogVisible = false">confirm</el-button>
+          </span>
+        </el-dialog>
+
+        <!-- Messagebox for add the new user with lower authority -->
+        <el-dialog title="Create  Subuser"
+                   :visible.sync="createUserVisible"
+                   width="330px"
+                   class="createUser"
+                   @close="createUserClosed">
+              <el-dialog width="340px"
+                         title="Warning"
+                         :visible.sync="createUserConfirmVisible"
+                         append-to-body>
+                <div style="color: #E6A23C; margin-bottom:5%">Please enter the username and password of subuser.</div>
+                <el-form :model="pwdForm" :rules="pwdFormRules" ref="createUserConfirmRef" label-width="150px" class="pwdForm" status-icon:true>
+                  <el-form-item label="username" prop="subUsername">
+                    <el-input v-model="pwdForm.subUsername"></el-input>
+                  </el-form-item>
+                <el-form-item label="password" prop="newPWD">
+                  <el-input v-model="pwdForm.newPWD" show-password clearable></el-input>
+                </el-form-item>
+                <el-form-item label="confirm password" prop="checkNewPWD">
+                  <el-input v-model="pwdForm.checkNewPWD" type="password" clearable></el-input>
+                </el-form-item>
+                </el-form>
+                <span slot="footer" class="dialog-footer">
+                  <el-button @click="createUserConfirmVisible = false">cancel</el-button>
+                  <el-button type="primary" @click="createUserConfirm">confirm</el-button>
+                </span>
+              </el-dialog>
+              <div style="color: #E6A23C; margin-bottom:5%">Please enter your username and password to create a subuser.</div>
+              <el-form :model="pwdForm" :rules="pwdFormRules" ref="adminCheckRef" label-width="100px" class="pwdForm" status-icon:true>
+                <el-form-item label="username" prop="username">
+                  <el-input v-model="pwdForm.username"></el-input>
+                </el-form-item>
+                <el-form-item label="password" prop="password">
+                  <el-input v-model="pwdForm.password" show-password clearable></el-input>
+                </el-form-item>
+              </el-form>
+          <span slot="footer" class="dialog-footer">
+            <el-button @click="createUserVisible = false">cancel</el-button>
+            <el-button type="primary" @click="adminCheck">confirm</el-button>
           </span>
         </el-dialog>
 
@@ -170,7 +238,7 @@ export default {
 
     var validatePass = (rule, value, callback) => {
       if (value !== this.pwdForm.newPWD) {
-        callback(new Error('Password confirmation doesnot match the password'))
+        callback(new Error('The two passwords entered are not the same.'))
       } else {
         callback()
       }
@@ -184,14 +252,15 @@ export default {
         username: '',
         password: '',
         newPWD: '',
-        checkNewPWD: ''
+        checkNewPWD: '',
+        subUsername: ''
       },
       pwdFormRules: {
         username: [
           { required: true, message: 'please enter the username', trigger: 'blur' },
           {
             max: 20,
-            message: 'Length of the password should be less than 20 letters',
+            message: 'Length of the username should be less than 20 letters',
             trigger: 'blur'
           }],
         password: [
@@ -215,6 +284,13 @@ export default {
             max: 20,
             message: 'Length of password should be less than 20 letters',
             trigger: 'blur'
+          }],
+        subUsername: [
+          { required: true, message: 'please enter the subusername', trigger: 'blur' },
+          {
+            max: 20,
+            message: 'Length of the username should be less than 20 letters',
+            trigger: 'blur'
           }]
       },
       meshDialogVisible: false,
@@ -223,7 +299,10 @@ export default {
         wholeMax: [{ validator: checkCurrentValue, trigger: 'blur' }]
       },
       initDialogVisible: false,
-      initConfirmVisible: false
+      initConfirmVisible: false,
+      createUserConfirmVisible: false,
+      createUserVisible: false,
+      CollapseClass: ['Collapsed']
     }
   },
   created () {
@@ -235,6 +314,13 @@ export default {
       this.$router.push('/login')
     },
     togleCollapse () {
+      if (this.isCollapse) {
+        this.CollapseClass.pop()
+        this.CollapseClass.push('Collapsed')
+      } else {
+        this.CollapseClass.pop()
+        this.CollapseClass.push('NotCollapsed')
+      }
       this.isCollapse = !this.isCollapse
       window.sessionStorage.setItem('activePath', this.activePath)
       if (this.isCollapse) {
@@ -252,23 +338,24 @@ export default {
     pwdDialogClosed () {
       this.$refs.pwdFormRef.resetFields()
     },
-    pwdDialogConfirm () {
+    async pwdDialogConfirm () {
       this.$refs.pwdFormRef.validate(async valid => {
         if (!valid) return
         const { data: res } = await this.$http.post('users/password',
           {
             username: this.pwdForm.username,
             password: this.pwdForm.password,
-            newpassword: this.pwdForm.newPWD
+            newPassword: this.pwdForm.newPWD
           })
-        this.pwdDialogVisible = false
         if (res.meta.status === 422) {
           return this.$message.error('wrong user information')
         }
+        // this.$refs.pwdFormRef.resetFields()
+        this.pwdDialogVisible = false
         if (res.meta.status === 500) {
           return this.$message.error('failed to change the password')
         }
-        this.$message.success('The name of the node has been successfully modified！')
+        this.$message.success('The password has been successfully modified！')
       })
     },
 
@@ -284,15 +371,17 @@ export default {
     meshDialogClosed () {
       this.$refs.meshFormRef.resetFields()
     },
-    meshDialogConfirm () {
+    async meshDialogConfirm () {
       this.$refs.meshFormRef.validate(async valid => {
         if (!valid) return
         const { data: res } = await this.$http.post('mesh/setting',
           {
-            wholeMax: this.meshForm.wholeMax,
-            safeMax: this.meshForm.safeMax
+            wholeMax: this.meshForm.wholeMax
           })
         this.meshDialogVisible = false
+        if (res.meta.status === 403) {
+          return this.$message.warning('Please log in as admin to operate.')
+        }
         if (res.meta.status === 500) {
           return this.$message.error('Failed to change the setting')
         }
@@ -301,10 +390,10 @@ export default {
     },
 
     // functions for the dialog of mesh initialization
-    initDialogClosed () {
+    initConfirmClosed () {
       this.$refs.initFormRef.resetFields()
     },
-    initDialogConfirm () {
+    async initDialogConfirm () {
       this.$refs.initFormRef.validate(async valid => {
         if (!valid) return
         const { data: res } = await this.$http.post('users/login',
@@ -312,13 +401,54 @@ export default {
             username: this.pwdForm.username,
             password: this.pwdForm.password
           })
-        this.initDialogVisible = false
         if (res.meta.status === 400) {
-          return this.$message.error('wrong user information')
+          return this.$message.error('Wrong user information!')
         }
         const { data: res1 } = await this.$http.post('mesh/init')
-        if (res1.meta.status !== 202) return
-        this.$message.success('The name of the node has been successfully modified！')
+        this.initConfirmVisible = false
+        if (res1.meta.status === 403) {
+          return this.$message.warning('Please log in as admin to operate.')
+        }
+        if (res1.meta.status !== 202) {
+          return this.$message.error('Failed to initialize the mesh!')
+        }
+        this.$message.success('The mesh has been successfully initialized!')
+      })
+    },
+    createUserClosed () {
+      this.$refs.adminCheckRef.resetFields()
+    },
+    async adminCheck () {
+      this.$refs.adminCheckRef.validate(async valid => {
+        if (!valid) return
+        const { data: res } = await this.$http.post('users/login',
+          {
+            username: this.pwdForm.username,
+            password: this.pwdForm.password
+          })
+        if (res.meta.status === 400) {
+          return this.$message.error('Wrong user information!')
+        }
+        this.createUserVisible = false
+        this.createUserConfirmVisible = true
+      })
+    },
+    async createUserConfirm () {
+      this.$refs.createUserConfirmRef.validate(async valid => {
+        if (!valid) return
+        const { data: res } = await this.$http.post('users/addUser',
+          {
+            subUsername: this.pwdForm.subUsername,
+            subPassword: this.pwdForm.newPWD
+          })
+        this.createUserConfirmVisible = false
+        if (res.meta.status === 403) {
+          return this.$message.warning('Please log in as admin to operate.')
+        }
+        if (res.meta.status === 500) {
+          return this.$message.warning('Failed to create the new subuser!')
+        }
+        return this.$message.success('Successfully added the new subuser!')
       })
     }
   }
@@ -337,25 +467,72 @@ export default {
     color:white;
     font-size: 20px;
   }
-  .el-aside {
+  .NotCollapsed {
     background-color: #DCDFE6;
     .el-menu {
       border-right: none;
+      width: 48px;
       .el-menu-item {
       padding-left: 10px !important;
-      max-width: 150px !important;
+      padding-right: 0px;
+      }
+      /deep/ .el-submenu__title {
+      padding-left: 10px !important;
       padding-right: 0px !important;
+      }
+      /deep/ .el-tooltip {
+        padding-left: 10px !important;
+        padding-right: 0px !important;
       }
     }
   }
-  /deep/ .el-submenu__title {
-  padding-left: 10px !important;
-  max-width: 150px !important;
-  padding-right: 0px !important;
+  .Collapsed {
+    background-color: #DCDFE6;
+    .el-menu {
+      border-right: none;
+      width: 160px;
+      /deep/ .el-menu-item {
+      padding-left: 10px !important;
+      min-width: 160px !important;
+      }
+      .el-submenu /deep/ .el-menu-item {
+        padding-left: 12px !important;
+      }
+      /deep/ .el-submenu__title {
+      padding-left: 10px !important;
+      }
+      /deep/ .el-tooltip {
+        padding-left: 10px !important;
+      }
+    }
   }
-  /deep/ .el-tooltip {
-  padding-left: 10px !important;
-  }
+  // .el-aside {
+  //   background-color: #DCDFE6;
+  //   .el-menu {
+  //     border-right: none;
+  //     .el-menu-item {
+  //     padding-left: 10px !important;
+  //     max-width: 160px;
+  //     min-width: 48px;
+  //     padding-right: 0px;
+  //     }
+  //     .el-submenu /deep/ .el-menu-item {
+  //     padding-left: 12px !important;
+  //     max-width: 160px;
+  //     min-width: 48px;
+  //     padding-right: 0px !important;
+  //     }
+  //     /deep/ .el-submenu__title {
+  //     padding-left: 10px !important;
+  //     max-width: 160px;
+  //     padding-right: 0px !important;
+  //     }
+  //   }
+  // }
+  // .meshMenu /deep/ .el-tooltip {
+  // padding-left: 10px !important;
+  // padding-right: 0px !important;
+  // }
   .el-main {
     background-color: #EAEDF1;
   }

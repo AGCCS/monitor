@@ -10,8 +10,14 @@
     <el-card class="box-card">
       <div slot="header" class="clearfix">
         <el-row>
-          <el-col :span="10">Nodes Information</el-col>
-          <el-col :span="6" :offset="8">
+          <el-col :span="5">Nodes Information</el-col>
+          <el-col :span="3">
+            <el-button type="primary" plain @click="getNodesInfoList" size="medium">Refresh</el-button>
+          </el-col>
+          <el-col :span="3" :offset="13">
+            <el-button type="primary" plain @click="firmwareDialogVisible = true" size="medium">Firmware<i class="el-icon-upload el-icon--right"></i></el-button>
+          </el-col>
+          <el-col :span="3">
             <el-button type="primary" plain @click="print('infoTable')" size="medium">Print</el-button>
           </el-col>
         </el-row>
@@ -82,6 +88,43 @@
         </el-pagination>
       </template>
     </el-card>
+
+    <!-- Messagebox for changing the settings of nodes-->
+    <el-dialog title="Firmware Upload"
+               :visible.sync="firmwareDialogVisible"
+               width="300px"
+               class="firmwareDialog"
+               @close="firmwareDialogClosed">
+      <el-form :model="firmwareForm" ref="firmwareFormRef" label-width="100px" class="settingform">
+        <el-form-item label="Board">
+          <el-radio-group v-model="firmwareForm.Board" size="small">
+            <el-radio :label="'m5stick'">ESP32</el-radio>
+            <el-radio :label="'AVR'">AVR</el-radio>
+          </el-radio-group>
+        </el-form-item>
+      </el-form>
+
+      <el-upload
+                 class="upload-demo"
+                 ref="upload"
+                 drag
+                 :limit="1"
+                 accept="application/octet-stream"
+                 action="http://localhost:3000/api/upload/"
+                 :on-success="uploadSucceed"
+                 :on-error="uploadErr"
+                 :on-change="beforeUpload"
+                 :auto-upload="false">
+        <i class="el-icon-upload"></i>
+        <div class="el-upload__text" align="center">Please drag the firmware here, or click to upload</div>
+        <div class="el-upload__tip" slot="tip" align="center">example form: "demesh_m5stick_6_3.bin"</div>
+      </el-upload>
+
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="firmwareDialogVisible = false">cancel</el-button>
+        <el-button type="primary" @click="firmwareDialogConfirm()">upload</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
@@ -89,19 +132,6 @@
 import printJS from 'print-js'
 export default {
   data () {
-    var checkCurrentValue = (rule, value, callback) => {
-      var isNum = /^\d+(\.\d+)?$/
-      if (value) {
-        if (!isNum.test(value)) {
-          callback(new Error('please enter only numbers'))
-        } else {
-          if (value > this.settingForm.cmaxCur) {
-            callback(new Error('max current should be less than the safe current ' + this.settingForm.cmaxCur + ' A'))
-          }
-        }
-      }
-      callback()
-    }
     return {
       queryInfo: {
         query: '',
@@ -113,27 +143,19 @@ export default {
       NodesInfoList: [],
       total: 0,
       nodeInfo: {},
-      NameDialogVisible: false, // if the messagebox of changing name is visible
-      nameForm: {},
-      settingDialogVisible: false, // if the messagebox of edit setting of node is visible
-      settingForm: {},
-      settingFormRules: {
-        maxCur: [
-          { validator: checkCurrentValue, trigger: 'blur' }]
-      },
-      isAuto: true // true: default workmode automatic. false: manual -> change setting allowed
+      firmwareDialogVisible: false,
+      firmwareForm: {}
     }
   },
   created () {
     this.getNodesInfoList()
-    // this.keepAlive()
   },
   methods: {
     // get the informationslist of mesh
     async getNodesInfoList () {
-      const { data: res } = await this.$http.get('nodes/status')
+      const { data: res } = await this.$http.get('nodes/list')
       if (res.meta.status !== 200) {
-        return this.$message.error('Failed to receive the data of nodes')
+        return this.$message.error('Failed to receive the information of nodes')
       }
       this.NodesInfoList = res.data
       this.total = res.data.length
@@ -159,12 +181,13 @@ export default {
       this.queryInfo.pagenum = newPage
       this.getNodesInfoList()
     },
+
+    // print the data of table
     print (id) {
       const html = document.querySelector('#' + id).innerHTML
       // create a new DOM
       const div = document.createElement('div')
       const printDOMID = 'printDOMElement'
-      window.console.log(html)
       div.id = printDOMID
       div.innerHTML = html
 
@@ -198,6 +221,51 @@ export default {
         style: ' table tr td,th { border-collapse: collapse;padding: 5px;border:1px #000 solid; }' // 表格样式
       })
       div.remove()
+    },
+
+    // reset the Form when closed without confirmation
+    firmwareDialogClosed () {
+      this.$refs.firmwareFormRef.resetFields()
+    },
+
+    //
+    firmwareDialogConfirm () {
+      this.$refs.upload.submit()
+      this.firmwareDialogVisible = false
+    },
+    async uploadSucceed (res, file, fileList) {
+      const length = file.name.length
+      const Version = file.name[length - 7] + '.' + file.name[length - 5]
+      const { data: result } = await this.$http.post('upload/firmware',
+        {
+          Board: this.firmwareForm.Board,
+          Version: Version
+        })
+      if (result.meta.status !== 202) {
+        this.$message.error('ESP32 cannot download the firmware!')
+      }
+      fileList.pop()
+      this.$message.success('ESP32 will download the firmware now.')
+    },
+    uploadErr () {
+      this.$message.error('Failed to upload the firmware!')
+    },
+    beforeUpload (file, fileList) {
+      if (this.firmwareForm.Board === undefined) {
+        this.$message.warning('Please choose type of board before upload.')
+        fileList.pop()
+        return false
+      }
+      if (file.name.search(this.firmwareForm.Board) < 0) {
+        fileList.pop()
+        this.$message.warning('File name should contain "' + this.firmwareForm.Board + '".')
+        return false
+      }
+      if (file.name.search('demesh_') < 0) {
+        fileList.pop()
+        this.$message.warning('File name should contain "demesh".')
+        return false
+      }
     }
   }
 }
@@ -212,6 +280,10 @@ export default {
   }
   /deep/ .el-card__header {
     padding: 10px 20px;
+  }
+  /deep/ .el-upload-dragger {
+    width: 210px;
+    margin-left: 25px;
   }
   .clearfix:before,
   .clearfix:after {

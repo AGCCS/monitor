@@ -187,6 +187,7 @@
         <el-button type="primary" @click="settingDialogConfirm">save</el-button>
       </span>
     </el-dialog>
+    <!-- <el-backtop target=".page-component__scroll .el-scrollbar__wrap"></el-backtop> -->
   </div>
 </template>
 
@@ -275,6 +276,9 @@ export default {
           workmode: nodeInfo.workmode,
           workStatus: nodeInfo.workStatus
         })
+      if (res.meta.status === 403) {
+        return this.$message.warning('Please log in as admin to operate.')
+      }
       if (res.meta.status !== 202) {
         nodeInfo.workStatus = !nodeInfo.workStatus
         return this.$message.error('Failed in changing the status of node')
@@ -301,11 +305,13 @@ export default {
     async NameDialogConfirm () {
       const { data: res } = await this.$http.put('nodes/list',
         { id: this.nameForm.id, nodeName: this.nameForm.nodeName })
+      this.NameDialogVisible = false
+      if (res.meta.status === 403) {
+        return this.$message.warning('Please log in as admin to operate.')
+      }
       if (res.meta.status !== 202) {
-        this.NameDialogVisible = false
         return this.$message.error('Failed to change the name of node！')
       }
-      this.NameDialogVisible = false
       this.getNodeStatusList()
       return this.$message.success('The name of the node has been successfully modified！')
     },
@@ -316,9 +322,9 @@ export default {
       if (res.meta.status !== 200) {
         return this.$message.error('Failed to read the information of node')
       }
-      // if (!res.data.connect) {
-      //   return this.$message.error('No connection to the node')
-      // }
+      if (!res.data.connect) {
+        return this.$message.error('No connection to the node')
+      }
       this.settingForm = res.data
       this.checkMode(this.settingForm.workmode)
       this.settingDialogVisible = true
@@ -328,7 +334,7 @@ export default {
     settingDialogClosed () {
       this.$refs.settingFormRef.resetFields()
     },
-    settingDialogConfirm () { // edit the setting of node and upload
+    async settingDialogConfirm () { // edit the setting of node and upload
       this.$refs.settingFormRef.validate(async valid => {
         if (!valid) return
         const { data: res } = await this.$http.put('nodes/status',
@@ -340,11 +346,13 @@ export default {
             workmode: this.settingForm.workmode,
             workStatus: this.settingForm.workStatus
           })
+        this.settingDialogVisible = false
+        if (res.meta.status === 403) {
+          return this.$message.warning('Please log in as admin to operate.')
+        }
         if (res.meta.status !== 202) {
-          this.settingDialogVisible = false
           return this.$message.error('Failed to change the setting of node！')
         }
-        this.settingDialogVisible = false
         this.getNodeStatusList()
         return this.$message.success('The setting of the node has been successfully modified！')
       })
@@ -352,10 +360,13 @@ export default {
     keepAlive () {
       setInterval(() => {
         this.getNodeStatusList()
-      }, 1000)
+      }, 3000)
     },
     async pressButtonB (macADR, nodeName) {
       const { data: res } = await this.$http.put('nodes/buttonB', { macADR: macADR })
+      if (res.meta.status === 403) {
+        return this.$message.warning('Please log in as admin to operate.')
+      }
       if (res.meta.status === 200) {
         return this.$message.success('Button of node ' + nodeName + ' is remotely pressed.')
       }
@@ -386,6 +397,9 @@ export default {
     },
     async Blink (macADR, nodeName) {
       const { data: res } = await this.$http.put('nodes/Blink', { macADR: macADR })
+      if (res.meta.status === 403) {
+        return this.$message.warning('Please log in as admin to operate.')
+      }
       if (res.meta.status === 200) {
         return this.$message.success('The node ' + nodeName + ' blinks now.')
       }
@@ -393,6 +407,9 @@ export default {
     },
     async noBlink (macADR, nodeName) {
       const { data: res } = await this.$http.put('nodes/noBlink', { macADR: macADR })
+      if (res.meta.status === 403) {
+        return this.$message.warning('Please log in as admin to operate.')
+      }
       if (res.meta.status === 200) {
         return this.$message.success('The node ' + nodeName + ' stops blinking now.')
       }

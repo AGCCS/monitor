@@ -56,6 +56,10 @@ export default {
         if (res.meta.status !== 200) return this.$message.error('Login failed')
         this.$message.success('login successful')
         window.sessionStorage.setItem('token', res.data.token) // get proper token for user
+        const { data: res1 } = await this.$http.get('nodes/list')
+        if (res1.meta.status !== 200) {
+          return this.$message.error('Failed to receive the information of nodes')
+        }
         this.$router.push('home')
       })
     }
