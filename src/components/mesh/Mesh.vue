@@ -102,7 +102,7 @@ export default {
     keepAlive () {
       setInterval(() => {
         this.getMeshInfo()
-      }, 2000)
+      }, 3000)
     }
     // async scanMesh () {
     //   const { data: res } = await this.$http.get('mesh/init')
