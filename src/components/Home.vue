@@ -100,7 +100,7 @@
               <el-input v-model="pwdForm.username" maxlength="20" clearable></el-input>
             </el-form-item>
             <el-form-item label="origin password" prop="password">
-              <el-input v-model="pwdForm.password" maxlength="20" show-password clearable></el-input>
+              <el-input v-model="pwdForm.password" maxlength="20"  show-password clearable></el-input>
             </el-form-item>
             <el-form-item label="new password" prop="newPWD">
               <el-input v-model="pwdForm.newPWD" maxlength="20" show-password clearable></el-input>
@@ -179,13 +179,13 @@
                 <div style="color: #E6A23C; margin-bottom:5%">Please enter the username and password of subuser.</div>
                 <el-form :model="pwdForm" :rules="pwdFormRules" ref="createUserConfirmRef" label-width="150px" class="pwdForm" status-icon:true>
                   <el-form-item label="username" prop="subUsername">
-                    <el-input v-model="pwdForm.subUsername"></el-input>
+                    <el-input v-model="pwdForm.subUsername" maxlength="20"></el-input>
                   </el-form-item>
                 <el-form-item label="password" prop="newPWD">
-                  <el-input v-model="pwdForm.newPWD" show-password clearable></el-input>
+                  <el-input v-model="pwdForm.newPWD" maxlength="20" show-password clearable></el-input>
                 </el-form-item>
                 <el-form-item label="confirm password" prop="checkNewPWD">
-                  <el-input v-model="pwdForm.checkNewPWD" type="password" clearable></el-input>
+                  <el-input v-model="pwdForm.checkNewPWD" maxlength="20" type="password" clearable></el-input>
                 </el-form-item>
                 </el-form>
                 <span slot="footer" class="dialog-footer">
@@ -259,37 +259,37 @@ export default {
         username: [
           { required: true, message: 'please enter the username', trigger: 'blur' },
           {
-            max: 20,
-            message: 'Length of the username should be less than 20 letters',
+            min: 3,
+            message: 'Username length must be at least 3 digits',
             trigger: 'blur'
           }],
         password: [
           { required: true, message: 'please enter the origin password', trigger: 'blur' },
           {
-            max: 20,
-            message: 'Length of the password should be less than 20 letters',
+            min: 6,
+            message: 'Password length must be at least 6 digits',
             trigger: 'blur'
           }],
         newPWD: [
           { required: true, message: 'please enter the new password', trigger: 'blur' },
           {
-            max: 20,
-            message: 'Length of password should be less than 20 letters',
+            max: 6,
+            message: 'Password length must be at least 6 digits',
             trigger: 'blur'
           }],
         checkNewPWD: [
           { validator: validatePass, trigger: 'blur' },
           { required: true, message: 'please confirm the new password', trigger: 'blur' },
           {
-            max: 20,
-            message: 'Length of password should be less than 20 letters',
+            max: 6,
+            message: 'Password length must be at least 6 digits',
             trigger: 'blur'
           }],
         subUsername: [
           { required: true, message: 'please enter the subusername', trigger: 'blur' },
           {
-            max: 20,
-            message: 'Length of the username should be less than 20 letters',
+            max: 3,
+            message: 'Username length must be at least 3 digits',
             trigger: 'blur'
           }]
       },

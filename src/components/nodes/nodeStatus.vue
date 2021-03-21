@@ -235,7 +235,7 @@ export default {
   },
   created () {
     this.getNodeStatusList()
-    this.keepAlive()
+    // this.keepAlive()
   },
   methods: {
     // get the informationslist of mesh
@@ -326,6 +326,13 @@ export default {
         return this.$message.error('No connection to the node')
       }
       this.settingForm = res.data
+      this.selPhases = []
+      while (res.data.Phases > 0) {
+        this.selPhases.push(res.data.Phases % 10)
+        res.data.Phases -= res.data.Phases % 10
+        res.data.Phases /= 10
+      }
+      this.selAllPhases = this.selPhases.length === 3
       this.checkMode(this.settingForm.workmode)
       this.settingDialogVisible = true
     },
@@ -337,6 +344,10 @@ export default {
     async settingDialogConfirm () { // edit the setting of node and upload
       this.$refs.settingFormRef.validate(async valid => {
         if (!valid) return
+        this.settingForm.Phases = 0
+        for (let i = 0; i < this.selPhases.length; i++) {
+          this.settingForm.Phases = this.settingForm.Phases * 10 + this.selPhases[i]
+        }
         const { data: res } = await this.$http.put('nodes/status',
           {
             id: this.settingForm.id,
@@ -347,6 +358,7 @@ export default {
             workStatus: this.settingForm.workStatus
           })
         this.settingDialogVisible = false
+        window.console.log(res)
         if (res.meta.status === 403) {
           return this.$message.warning('Please log in as admin to operate.')
         }
@@ -381,15 +393,10 @@ export default {
     },
     handleSelAllPhases (val) {
       this.selPhases = val ? phasesOptions : []
-      this.settingForm.Phases = val ? 123 : 0
     },
     handleSelPhases (val) {
       const selRes = val.length
-      this.settingForm.Phases = 0
       this.selAllPhases = selRes === this.Phases.length
-      for (let i = 0; i < this.selPhases.length; i++) {
-        this.settingForm.Phases = this.settingForm.Phases * 10 + this.selPhases[i]
-      }
     },
     filterHandler (value, row, column) {
       const property = column.property
