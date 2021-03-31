@@ -41,7 +41,7 @@
                            width="140"
                            sortable>
           </el-table-column>
-          <el-table-column prop="macADR"
+          <el-table-column prop="macAddress"
                            label="Mac Address"
                            width="140">
           </el-table-column>
@@ -92,10 +92,27 @@
     <!-- Messagebox for changing the settings of nodes-->
     <el-dialog title="Firmware Upload"
                :visible.sync="firmwareDialogVisible"
-               width="300px"
+               width="320px"
                class="firmwareDialog"
                @close="firmwareDialogClosed">
-      <el-form :model="firmwareForm" ref="firmwareFormRef" label-width="100px" class="settingform">
+      <el-dialog width="340px"
+                 title="Choose Node"
+                 :visible.sync="chooseNodeVisible"
+                 @close="chooseNodeClosed"
+                 append-to-body>
+        <el-form :model="chooseNodeForm" ref="chooseNodeFormRef" class="chooseNodeForm">
+          <el-form-item>
+            <el-radio-group v-model="chooseNodeForm.index" size="medium">
+              <el-radio :label="i" :key="item.macADR" v-for="(item, i) in chooseNodeForm.nodeList" style="width:120px">{{item.nodeName? item.nodeName: item.macADR}}</el-radio>
+            </el-radio-group>
+          </el-form-item>
+        </el-form>
+        <span slot="footer" class="dialog-footer">
+        <el-button @click="chooseNodeVisible = false">cancel</el-button>
+        <el-button type="primary" @click="chooseNodeConfirm()">confirm</el-button>
+        </span>
+      </el-dialog>
+      <el-form :model="firmwareForm" ref="firmwareFormRef" label-width="100px" class="firmwareForm">
         <el-form-item label="Board">
           <el-radio-group v-model="firmwareForm.Board" size="small">
             <el-radio :label="'m5stick'">ESP32</el-radio>
@@ -117,12 +134,12 @@
                  :auto-upload="false">
         <i class="el-icon-upload"></i>
         <div class="el-upload__text" align="center">Please drag the firmware here, or click to upload</div>
-        <div class="el-upload__tip" slot="tip" align="center">example form: "demesh_m5stick_6_3.bin"</div>
+        <div class="el-upload__tip" slot="tip" align="center">example for ESP32: "demesh_m5stick_6_3.bin"</div>
       </el-upload>
 
       <span slot="footer" class="dialog-footer">
         <el-button @click="firmwareDialogVisible = false">cancel</el-button>
-        <el-button type="primary" @click="firmwareDialogConfirm()">upload</el-button>
+        <el-button type="primary" @click="firmwareDialogConfirm()">confirm</el-button>
       </span>
     </el-dialog>
   </div>
@@ -144,7 +161,12 @@ export default {
       total: 0,
       nodeInfo: {},
       firmwareDialogVisible: false,
-      firmwareForm: {}
+      firmwareForm: {},
+      chooseNodeVisible: false,
+      chooseNodeForm: {
+        nodeList: [],
+        index: null
+      }
     }
   },
   created () {
@@ -161,11 +183,11 @@ export default {
       this.total = res.data.length
       for (let i = 0; i < this.NodesInfoList.length; i++) {
         var macADR = this.NodesInfoList[i].macADR
-        this.NodesInfoList[i].macADR = ''
+        this.NodesInfoList[i].macAddress = ''
         for (let j = 0; j < macADR.length; j++) {
-          this.NodesInfoList[i].macADR += macADR[j]
+          this.NodesInfoList[i].macAddress += macADR[j]
           if (j % 2 === 1 && j < macADR.length - 1) {
-            this.NodesInfoList[i].macADR += ':'
+            this.NodesInfoList[i].macAddress += ':'
           }
         }
       }
@@ -230,22 +252,53 @@ export default {
 
     //
     firmwareDialogConfirm () {
-      this.$refs.upload.submit()
-      this.firmwareDialogVisible = false
+      if (this.firmwareForm.Board === 'm5stick') {
+        this.$refs.upload.submit()
+        this.firmwareDialogVisible = false
+      } else if (this.firmwareForm.Board === 'AVR') {
+        var length = 0
+        for (let i = 0; i < this.NodesInfoList.length; i++) {
+          if (this.NodesInfoList[i].connect) {
+            this.chooseNodeForm.nodeList[length] = this.NodesInfoList[i]
+            length++
+          }
+        }
+        window.console.log(this.chooseNodeForm.nodeList)
+        this.chooseNodeVisible = true
+      }
     },
     async uploadSucceed (res, file, fileList) {
-      const length = file.name.length
-      const Version = file.name[length - 7] + '.' + file.name[length - 5]
-      const { data: result } = await this.$http.post('upload/firmware',
-        {
-          Board: this.firmwareForm.Board,
-          Version: Version
-        })
-      if (result.meta.status !== 202) {
-        this.$message.error('ESP32 cannot download the firmware!')
+      if (this.firmwareForm.Board === 'm5stick') {
+        const length = file.name.length
+        const Version = file.name[length - 7] + '.' + file.name[length - 5]
+        const { data: result } = await this.$http.post('upload/ESP32',
+          {
+            Board: this.firmwareForm.Board,
+            Version: Version
+          })
+        if (result.meta.status !== 202) {
+          this.$message.error('ESP32 cannot download the firmware!')
+        }
+        fileList.pop()
+        this.$message.success('ESP32 will download the firmware now.')
+      } else if (this.firmwareForm.Board === 'AVR') {
+        const index = this.chooseNodeForm.index
+        const { data: result } = await this.$http.post('upload/AVR',
+          {
+            fileName: file.name,
+            macADR: this.chooseNodeForm.nodeList[index].macADR,
+            macAddress: this.chooseNodeForm.nodeList[index].macAddress
+          })
+        if (result.meta.status !== 202) {
+          this.$message.error('Node ',
+            this.chooseNodeForm.nodeList[index].nodeName ? this.chooseNodeForm.nodeList[index].nodeName : this.chooseNodeForm.nodeList[index].macADR,
+            ' cannot download the firmware for AVR!')
+        }
+        fileList.pop()
+        this.$message.success('Node ' +
+          this.chooseNodeForm.nodeList[index].nodeName ? this.chooseNodeForm.nodeList[index].nodeName : this.chooseNodeForm.nodeList[index].macADR +
+          'will download the firmware for AVR now.')
       }
-      fileList.pop()
-      this.$message.success('ESP32 will download the firmware now.')
     },
     uploadErr () {
       this.$message.error('Failed to upload the firmware!')
@@ -266,6 +319,15 @@ export default {
         this.$message.warning('File name should contain "demesh".')
         return false
       }
+    },
+
+    chooseNodeConfirm () {
+      this.$refs.upload.submit()
+      this.chooseNodeVisible = false
+      this.firmwareDialogVisible = false
+    },
+    chooseNodeClosed () {
+      this.$refs.chooseNodeFormRef.resetFields()
     }
   }
 }
@@ -283,7 +345,7 @@ export default {
   }
   /deep/ .el-upload-dragger {
     width: 210px;
-    margin-left: 25px;
+    margin-left: 35px;
   }
   .clearfix:before,
   .clearfix:after {

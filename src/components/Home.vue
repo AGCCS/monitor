@@ -172,36 +172,36 @@
                    width="330px"
                    class="createUser"
                    @close="createUserClosed">
-              <el-dialog width="340px"
+          <el-dialog width="340px"
                          title="Warning"
                          :visible.sync="createUserConfirmVisible"
                          append-to-body>
-                <div style="color: #E6A23C; margin-bottom:5%">Please enter the username and password of subuser.</div>
-                <el-form :model="pwdForm" :rules="pwdFormRules" ref="createUserConfirmRef" label-width="150px" class="pwdForm" status-icon:true>
-                  <el-form-item label="username" prop="subUsername">
-                    <el-input v-model="pwdForm.subUsername" maxlength="20"></el-input>
-                  </el-form-item>
-                <el-form-item label="password" prop="newPWD">
-                  <el-input v-model="pwdForm.newPWD" maxlength="20" show-password clearable></el-input>
-                </el-form-item>
-                <el-form-item label="confirm password" prop="checkNewPWD">
-                  <el-input v-model="pwdForm.checkNewPWD" maxlength="20" type="password" clearable></el-input>
-                </el-form-item>
-                </el-form>
-                <span slot="footer" class="dialog-footer">
-                  <el-button @click="createUserConfirmVisible = false">cancel</el-button>
-                  <el-button type="primary" @click="createUserConfirm">confirm</el-button>
-                </span>
-              </el-dialog>
-              <div style="color: #E6A23C; margin-bottom:5%">Please enter your username and password to create a subuser.</div>
-              <el-form :model="pwdForm" :rules="pwdFormRules" ref="adminCheckRef" label-width="100px" class="pwdForm" status-icon:true>
+            <div style="color: #E6A23C; margin-bottom:5%">Please enter the username and password of subuser.</div>
+            <el-form :model="pwdForm" :rules="pwdFormRules" ref="createUserConfirmRef" label-width="150px" class="pwdForm" status-icon:true>
+              <el-form-item label="username" prop="subUsername">
+                <el-input v-model="pwdForm.subUsername" maxlength="20"></el-input>
+              </el-form-item>
+            <el-form-item label="password" prop="newPWD">
+              <el-input v-model="pwdForm.newPWD" maxlength="20" show-password clearable></el-input>
+            </el-form-item>
+            <el-form-item label="confirm password" prop="checkNewPWD">
+              <el-input v-model="pwdForm.checkNewPWD" maxlength="20" type="password" clearable></el-input>
+            </el-form-item>
+            </el-form>
+            <span slot="footer" class="dialog-footer">
+              <el-button @click="createUserConfirmVisible = false">cancel</el-button>
+              <el-button type="primary" @click="createUserConfirm">confirm</el-button>
+            </span>
+          </el-dialog>
+          <div style="color: #E6A23C; margin-bottom:5%">Please enter your username and password to create a subuser.</div>
+          <el-form :model="pwdForm" :rules="pwdFormRules" ref="adminCheckRef" label-width="100px" class="pwdForm" status-icon:true>
                 <el-form-item label="username" prop="username">
                   <el-input v-model="pwdForm.username"></el-input>
                 </el-form-item>
                 <el-form-item label="password" prop="password">
                   <el-input v-model="pwdForm.password" show-password clearable></el-input>
                 </el-form-item>
-              </el-form>
+          </el-form>
           <span slot="footer" class="dialog-footer">
             <el-button @click="createUserVisible = false">cancel</el-button>
             <el-button type="primary" @click="adminCheck">confirm</el-button>
