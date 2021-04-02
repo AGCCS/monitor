@@ -235,7 +235,7 @@ export default {
   },
   created () {
     this.getNodeStatusList()
-    // this.keepAlive()
+    this.keepAlive()
   },
   methods: {
     // get the informationslist of mesh

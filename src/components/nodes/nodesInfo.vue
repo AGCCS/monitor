@@ -115,7 +115,7 @@
       <el-form :model="firmwareForm" ref="firmwareFormRef" label-width="100px" class="firmwareForm">
         <el-form-item label="Board">
           <el-radio-group v-model="firmwareForm.Board" size="small">
-            <el-radio :label="'m5stick'">ESP32</el-radio>
+            <el-radio :label="'ESP32'">ESP32</el-radio>
             <el-radio :label="'AVR'">AVR</el-radio>
           </el-radio-group>
         </el-form-item>
@@ -147,6 +147,7 @@
 
 <script>
 import printJS from 'print-js'
+// import mqtt from 'mqtt'
 export default {
   data () {
     return {
@@ -165,7 +166,7 @@ export default {
       chooseNodeVisible: false,
       chooseNodeForm: {
         nodeList: [],
-        index: null
+        index: -1
       }
     }
   },
@@ -252,7 +253,7 @@ export default {
 
     //
     firmwareDialogConfirm () {
-      if (this.firmwareForm.Board === 'm5stick') {
+      if (this.firmwareForm.Board === 'ESP32') {
         this.$refs.upload.submit()
         this.firmwareDialogVisible = false
       } else if (this.firmwareForm.Board === 'AVR') {
@@ -263,17 +264,17 @@ export default {
             length++
           }
         }
-        window.console.log(this.chooseNodeForm.nodeList)
         this.chooseNodeVisible = true
       }
     },
     async uploadSucceed (res, file, fileList) {
-      if (this.firmwareForm.Board === 'm5stick') {
+      if (this.firmwareForm.Board === 'ESP32') {
         const length = file.name.length
         const Version = file.name[length - 7] + '.' + file.name[length - 5]
+        const Board = file.name.slice(7, -8)
         const { data: result } = await this.$http.post('upload/ESP32',
           {
-            Board: this.firmwareForm.Board,
+            Board: Board,
             Version: Version
           })
         if (result.meta.status !== 202) {
@@ -283,6 +284,7 @@ export default {
         this.$message.success('ESP32 will download the firmware now.')
       } else if (this.firmwareForm.Board === 'AVR') {
         const index = this.chooseNodeForm.index
+        var nodeName = this.chooseNodeForm.nodeList[index].nodeName ? this.chooseNodeForm.nodeList[index].nodeName : this.chooseNodeForm.nodeList[index].macADR
         const { data: result } = await this.$http.post('upload/AVR',
           {
             fileName: file.name,
@@ -290,14 +292,23 @@ export default {
             macAddress: this.chooseNodeForm.nodeList[index].macAddress
           })
         if (result.meta.status !== 202) {
-          this.$message.error('Node ',
-            this.chooseNodeForm.nodeList[index].nodeName ? this.chooseNodeForm.nodeList[index].nodeName : this.chooseNodeForm.nodeList[index].macADR,
-            ' cannot download the firmware for AVR!')
+          this.$message.error('Node ' + nodeName + ' cannot download the firmware for AVR!')
         }
         fileList.pop()
-        this.$message.success('Node ' +
-          this.chooseNodeForm.nodeList[index].nodeName ? this.chooseNodeForm.nodeList[index].nodeName : this.chooseNodeForm.nodeList[index].macADR +
-          'will download the firmware for AVR now.')
+        this.$message.success('Node ' + nodeName + 'will download the firmware for AVR now.')
+        setTimeout(() => {
+          this.getNodesInfoList()
+        }, 5000)
+        // var client = mqtt.connect('ws://196.168.2.109:1884')
+        // client.subscribe('/DEMESH/' + this.chooseNodeForm.nodeList[index].macADR + '/acknowledge', { qos: 1 })
+        // client.on('message', function (topic, message) {
+        //   var mesJson = JSON.parse(message)
+        //   if (mesJson.mtype === 'avrota' && mesJson.state === 'running') {
+        //     this.$message.success('Node ' + nodeName +
+        //     'has successfully downloaded the firmware for AVR.')
+        //     this.getNodesInfoList()
+        //   }
+        // })
       }
     },
     uploadErr () {
@@ -309,25 +320,33 @@ export default {
         fileList.pop()
         return false
       }
-      if (file.name.search(this.firmwareForm.Board) < 0) {
-        fileList.pop()
-        this.$message.warning('File name should contain "' + this.firmwareForm.Board + '".')
-        return false
-      }
-      if (file.name.search('demesh_') < 0) {
-        fileList.pop()
-        this.$message.warning('File name should contain "demesh".')
-        return false
+      if (this.firmwareForm.Board === 'ESP32') {
+        // if (file.name.search(this.firmwareForm.Board) < 0) {
+        if (file.name.search('m5stick') < 0) {
+          fileList.pop()
+          this.$message.warning('File name should contain "' + 'm5stick' + '".')
+          return false
+        }
+        if (file.name.search('demesh_') < 0) {
+          fileList.pop()
+          this.$message.warning('File name should contain "demesh".')
+          return false
+        }
       }
     },
 
     chooseNodeConfirm () {
+      if (this.chooseNodeForm.index < 0) {
+        this.$message.warning('Please select the node where AVR firmware needs to be uploaded.')
+        return
+      }
       this.$refs.upload.submit()
       this.chooseNodeVisible = false
       this.firmwareDialogVisible = false
     },
     chooseNodeClosed () {
       this.$refs.chooseNodeFormRef.resetFields()
+      this.chooseNodeForm.index = -1
     }
   }
 }
