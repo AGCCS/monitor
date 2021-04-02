@@ -295,6 +295,7 @@ export default {
           this.$message.error('Node ' + nodeName + ' cannot download the firmware for AVR!')
         }
         fileList.pop()
+        this.chooseNodeForm.index = -1
         this.$message.success('Node ' + nodeName + 'will download the firmware for AVR now.')
         setTimeout(() => {
           this.getNodesInfoList()
@@ -346,7 +347,6 @@ export default {
     },
     chooseNodeClosed () {
       this.$refs.chooseNodeFormRef.resetFields()
-      this.chooseNodeForm.index = -1
     }
   }
 }
