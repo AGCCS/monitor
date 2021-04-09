@@ -142,7 +142,7 @@
                  drag
                  :limit="1"
                  accept="application/octet-stream, *.bin"
-                 action="http://localhost:3000/api/upload/"
+                 action="http://192.168.5.1:3000/api/upload/"
                  :on-success="uploadSucceed"
                  :on-error="uploadErr"
                  :on-change="beforeUpload"
@@ -213,7 +213,6 @@ export default {
   methods: {
     // get the informationslist of mesh
     async getNodesInfoList () {
-      window.console.log('hello')
       const { data: res } = await this.$http.get('nodes/list')
       if (res.meta.status !== 200) {
         return this.$message.error('Failed to receive the information of nodes')
@@ -302,7 +301,6 @@ export default {
 
     // reset the Form when closed without confirmation
     firmwareDialogClosed () {
-      this.firmwareForm.Board = null
       this.$refs.firmwareFormRef.resetFields()
     },
 

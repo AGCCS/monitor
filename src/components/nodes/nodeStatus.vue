@@ -174,12 +174,12 @@
       <el-form :model="settingForm" :rules="settingFormRules" ref="settingFormRef" label-width="100px" class="settingform">
         <el-form-item label="Workmode">
           <el-radio-group v-model="settingForm.workmode" size="small" @change="checkNode(settingForm.workmode, settingForm.workStatus)">
-            <el-radio :label="'auto'" :disabled="isReady">auto</el-radio>
-            <el-radio :label="'manual'" :disabled="isReady">manual</el-radio>
+            <el-radio :label="'auto'" :disabled="!isReady">auto</el-radio>
+            <el-radio :label="'manual'" :disabled="!isReady">manual</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="Max current" prop="maxCur">
-          <el-input v-model="settingForm.maxCur" clearable maxlength="5" :disabled="isAuto">
+          <el-input v-model="settingForm.smaxCur" clearable maxlength="5" :disabled="isAuto">
             <template slot="append"><div style="width:0px">A</div></template>
           </el-input>
         </el-form-item>
@@ -209,9 +209,9 @@ export default {
         if (!isNum.test(value)) {
           callback(new Error('please enter only numbers'))
         } else {
-          if (value > this.settingForm.cmaxCur) {
-            callback(new Error('max current should be less than the safe current ' + this.settingForm.cmaxCur + ' A'))
-          }
+          // if (value > this.settingForm.cmaxCur) {
+          //   callback(new Error('max current should be less than the safe current ' + this.settingForm.cmaxCur + ' A'))
+          // }
           if (value <= 5) {
             callback(new Error('max current should be more than the 5 A'))
           }
@@ -363,10 +363,10 @@ export default {
       }
       this.settingForm = res.data
       this.selPhases = []
-      while (res.data.Phases > 0) {
-        this.selPhases.push(res.data.Phases % 10)
-        res.data.Phases -= res.data.Phases % 10
-        res.data.Phases /= 10
+      while (res.data.sPhases > 0) {
+        this.selPhases.push(res.data.sPhases % 10)
+        res.data.sPhases -= res.data.sPhases % 10
+        res.data.sPhases /= 10
       }
       this.selAllPhases = this.selPhases.length === 3
       this.checkNode(this.settingForm.workmode, this.settingForm.workStatus)
@@ -389,7 +389,7 @@ export default {
             id: this.settingForm.id,
             macADR: this.settingForm.macADR,
             sPhases: this.settingForm.Phases,
-            smaxCur: this.settingForm.maxCur,
+            smaxCur: this.settingForm.smaxCur,
             workmode: this.settingForm.workmode,
             workStatus: this.settingForm.workStatus
           })
