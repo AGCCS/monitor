@@ -15,7 +15,7 @@
             <el-button type="primary" plain @click="getNodesInfoList" size="medium">Refresh</el-button>
           </el-col>
           <el-col :span="3" :offset="13">
-            <el-button type="primary" plain @click="firmwareDialogVisible = true" size="medium">Firmware<i class="el-icon-upload el-icon--right"></i></el-button>
+            <el-button type="primary" plain @click="showFirmwareDialog" size="medium">Firmware<i class="el-icon-upload el-icon--right"></i></el-button>
           </el-col>
           <el-col :span="3">
             <el-button type="primary" plain @click="print('infoTable')" size="medium">Print</el-button>
@@ -31,15 +31,30 @@
                   stripe
                   style="width: 100%"
                   id = 'infoTable'>
-          <el-table-column prop="id"
+          <!-- <el-table-column prop="id"
                            label="id"
                            sortable
                            width="60">
+          </el-table-column> -->
+          <el-table-column type="index"
+                           label="#"
+                           sortable
+                           width="60">
           </el-table-column>
-          <el-table-column prop="nodeName"
+          <!-- <el-table-column prop="nodeName"
                            label="Name"
                            width="140"
                            sortable>
+          </el-table-column> -->
+          <el-table-column label="Name"
+                           sortable
+                           width="150">
+            <template slot-scope="scope">
+              <div>
+                <el-link><i class="el-icon-edit" @click="showNameDialog(scope.row.id)"></i></el-link>
+                {{ scope.row.nodeName }}
+              </div>
+            </template>
           </el-table-column>
           <el-table-column prop="macAddress"
                            label="Mac Address"
@@ -126,7 +141,7 @@
                  ref="upload"
                  drag
                  :limit="1"
-                 accept="application/octet-stream"
+                 accept="application/octet-stream, *.bin"
                  action="http://localhost:3000/api/upload/"
                  :on-success="uploadSucceed"
                  :on-error="uploadErr"
@@ -140,6 +155,26 @@
       <span slot="footer" class="dialog-footer">
         <el-button @click="firmwareDialogVisible = false">cancel</el-button>
         <el-button type="primary" @click="firmwareDialogConfirm()">confirm</el-button>
+      </span>
+    </el-dialog>
+
+    <!-- Messagebox for changing the name of nodes-->
+    <el-dialog title="edit node name"
+               :visible.sync="NameDialogVisible"
+               width="300px"
+               class="NameDialog"
+               @close="nameDialogClosed">
+      <el-form :model="nameForm" ref="nameFormRef" label-width="100px">
+        <el-form-item label="Mac address" prop="macADR">
+          <el-input v-model="nameForm.macADR" disabled></el-input>
+        </el-form-item>
+        <el-form-item label="Node name" prop="nodeName">
+          <el-input v-model="nameForm.nodeName" clearable maxlength="15"></el-input>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="NameDialogVisible = false">cancel</el-button>
+        <el-button type="primary" @click="NameDialogConfirm">save</el-button>
       </span>
     </el-dialog>
   </div>
@@ -167,7 +202,9 @@ export default {
       chooseNodeForm: {
         nodeList: [],
         index: -1
-      }
+      },
+      NameDialogVisible: false, // if the messagebox of changing name is visible
+      nameForm: {}
     }
   },
   created () {
@@ -176,6 +213,7 @@ export default {
   methods: {
     // get the informationslist of mesh
     async getNodesInfoList () {
+      window.console.log('hello')
       const { data: res } = await this.$http.get('nodes/list')
       if (res.meta.status !== 200) {
         return this.$message.error('Failed to receive the information of nodes')
@@ -246,24 +284,33 @@ export default {
       div.remove()
     },
 
+    // Show the form of firmware upload
+    showFirmwareDialog () {
+      var length = 0
+      for (let i = 0; i < this.NodesInfoList.length; i++) {
+        if (this.NodesInfoList[i].connect) {
+          this.chooseNodeForm.nodeList[length] = this.NodesInfoList[i]
+          length++
+        }
+      }
+      // if (!length) {
+      //   this.firmwareDialogVisible = false
+      //   return this.$message.error('Please check the mesh. No node is connected!')
+      // }
+      this.firmwareDialogVisible = true
+    },
+
     // reset the Form when closed without confirmation
     firmwareDialogClosed () {
+      this.firmwareForm.Board = null
       this.$refs.firmwareFormRef.resetFields()
     },
 
-    //
     firmwareDialogConfirm () {
       if (this.firmwareForm.Board === 'ESP32') {
         this.$refs.upload.submit()
         this.firmwareDialogVisible = false
       } else if (this.firmwareForm.Board === 'AVR') {
-        var length = 0
-        for (let i = 0; i < this.NodesInfoList.length; i++) {
-          if (this.NodesInfoList[i].connect) {
-            this.chooseNodeForm.nodeList[length] = this.NodesInfoList[i]
-            length++
-          }
-        }
         this.chooseNodeVisible = true
       }
     },
@@ -347,6 +394,36 @@ export default {
     },
     chooseNodeClosed () {
       this.$refs.chooseNodeFormRef.resetFields()
+    },
+
+    // show the dialog for changing the name of node
+    async showNameDialog (id) {
+      const { data: res } = await this.$http.get('nodes/list?id=' + id)
+      if (res.meta.status !== 200) {
+        return this.$message.error('Failed to read the information of node')
+      }
+      this.nameForm = res.data
+      this.NameDialogVisible = true
+    },
+
+    // reset the Form when closed without confirmation
+    nameDialogClosed () {
+      this.$refs.nameFormRef.resetFields()
+    },
+
+    // edit the name of node then upload
+    async NameDialogConfirm () {
+      const { data: res } = await this.$http.put('nodes/list',
+        { id: this.nameForm.id, nodeName: this.nameForm.nodeName })
+      this.NameDialogVisible = false
+      if (res.meta.status === 403) {
+        return this.$message.warning('Please log in as admin to operate.')
+      }
+      if (res.meta.status !== 202) {
+        return this.$message.error('Failed to change the name of node！')
+      }
+      this.getNodesInfoList()
+      return this.$message.success('The name of the node has been successfully modified！')
     }
   }
 }

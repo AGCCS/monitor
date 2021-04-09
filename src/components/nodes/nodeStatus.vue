@@ -24,7 +24,8 @@
                   stripe
                   style="width: 100%">
           <el-table-column type="index"
-                           label="#">
+                           label="#"
+                           width="30">
           </el-table-column>
           <el-table-column label="name"
                            sortable
@@ -51,10 +52,17 @@
               </div>
             </template>
           </el-table-column>
-          <el-table-column prop="workStatus"
+          <el-table-column prop="ccss"
                            label="status"
+                           :filters="[{text: 'Off', value: 0 }, {text: 'charging', value: 3 }]"
+                           :filter-method="filterHandler"
                            sortable
-                           width="100">
+                           width="130">
+              <template slot-scope="scope">
+                <div>
+                  {{ scope.row.workStatus }}
+                </div>
+            </template>
           </el-table-column>
           <el-table-column prop="Cur1"
                            sortable
@@ -73,8 +81,8 @@
           </el-table-column>
           <el-table-column prop="maxCur"
                            sortable
-                           label="max current /A"
-                           width="160">
+                           label="maxCur /A"
+                           width="130">
           </el-table-column>
           <!-- <el-table-column prop="workmode"
                            sortable
@@ -93,13 +101,13 @@
                 </el-button>
               </el-tooltip>
 
-              <!-- press button B, only for test -->
+              <!-- press the operation Button, only for test -->
               <el-tooltip effect="dark" content="button B" placement="top">
                 <el-button type="primary"
                            icon="el-icon-video-play"
                            size="mini"
                            circle
-                           @click="pressButtonB(scope.row.macADR, scope.row.nodeName)">
+                           @click="operaButton(scope.row.macADR, scope.row.nodeName, scope.row.connect)">
                 </el-button>
               </el-tooltip>
 
@@ -109,7 +117,7 @@
                            icon="el-icon-s-opportunity"
                            size="mini"
                            circle
-                           @click="Blink(scope.row.macADR, scope.row.nodeName)">
+                           @click="Blink(scope.row.macADR, scope.row.nodeName, scope.row.connect)">
                 </el-button>
               </el-tooltip>
               <!-- Node stops blinking to find the node -->
@@ -118,7 +126,7 @@
                            icon="el-icon-s-opportunity"
                            size="mini"
                            circle
-                           @click="noBlink(scope.row.macADR, scope.row.nodeName)">
+                           @click="noBlink(scope.row.macADR, scope.row.nodeName, scope.row.connect)">
                 </el-button>
               </el-tooltip>
             </template>
@@ -127,7 +135,7 @@
 
         <!-- Pagination of table-->
         <el-pagination @size-change="handleSizeChange"
-                       @current-change="handleCurrentChange"
+                       @current-change="handlePageChange"
                        :current-page="queryInfo.pagenum"
                        :page-sizes="[5,10,15,20,40]"
                        :page-size="queryInfo.pagesize"
@@ -165,9 +173,9 @@
                @close="settingDialogClosed">
       <el-form :model="settingForm" :rules="settingFormRules" ref="settingFormRef" label-width="100px" class="settingform">
         <el-form-item label="Workmode">
-          <el-radio-group v-model="settingForm.workmode" size="small" @change="checkMode(settingForm.workmode)">
-            <el-radio :label="'auto'">auto</el-radio>
-            <el-radio :label="'manual'">manual</el-radio>
+          <el-radio-group v-model="settingForm.workmode" size="small" @change="checkNode(settingForm.workmode, settingForm.workStatus)">
+            <el-radio :label="'auto'" :disabled="isReady">auto</el-radio>
+            <el-radio :label="'manual'" :disabled="isReady">manual</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="Max current" prop="maxCur">
@@ -204,6 +212,9 @@ export default {
           if (value > this.settingForm.cmaxCur) {
             callback(new Error('max current should be less than the safe current ' + this.settingForm.cmaxCur + ' A'))
           }
+          if (value <= 5) {
+            callback(new Error('max current should be more than the 5 A'))
+          }
         }
       }
       callback()
@@ -228,14 +239,23 @@ export default {
           { validator: checkCurrentValue, trigger: 'blur' }]
       },
       isAuto: true, // true: default workmode automatic. false: manual -> change setting allowed
+      isReady: false, // false: Node standby of error. true: node is working or ready to work.
       selAllPhases: true,
       selPhases: [1, 2, 3],
-      Phases: phasesOptions
+      Phases: phasesOptions,
+      workStatusFilter: [
+        { text: 'Off', value: 0 },
+        { text: 'Wait EV', value: 1 },
+        { text: 'Negotiation', value: 2 },
+        { text: 'Charging', value: 3 },
+        { text: 'Pause', value: 4 },
+        { text: 'Wait Power', value: 5 },
+        { text: 'Err', value: 9 }]
     }
   },
   created () {
     this.getNodeStatusList()
-    this.keepAlive()
+    // this.keepAlive()
   },
   methods: {
     // get the informationslist of mesh
@@ -249,9 +269,25 @@ export default {
         if (!this.NodeStatusList[i].nodeName) {
           this.NodeStatusList[i].nodeName = this.NodeStatusList[i].macADR
         }
-        // if (!this.NodeStatusList[i].connect) {
-        //   this.NodeStatusList.splice(i, 1)
-        // }
+        // ccss: 0x: off, waiting for EV: 1x, negotiating power: 2x,
+        // charging: 3x, pausing 4x, waiting for power: 5x, 9x: Error, others: Fatal Err
+        var x = this.NodeStatusList[i].workStatus % 10
+        var workStatus = ''
+        this.NodeStatusList[i].ccss = Math.floor(this.NodeStatusList[i].workStatus / 10)
+        switch (this.NodeStatusList[i].ccss) {
+          case 0: workStatus = 'Off[' + x + ']'; break
+          case 1: workStatus = 'Wait EV[' + x + ']'; break
+          case 2: workStatus = 'Negotiation[' + x + ']'; break
+          case 3: workStatus = 'Charging[' + x + ']'; break
+          case 4: workStatus = 'Pause[' + x + ']'; break
+          case 5: workStatus = 'Wait power[' + x + ']'; break
+          case 9: workStatus = 'Err[' + x + ']'; break
+          default: workStatus = 'Fatal Err'; break
+        }
+        this.NodeStatusList[i].workStatus = workStatus
+        if (!this.NodeStatusList[i].connect) {
+          this.NodeStatusList.splice(i, 1)
+        }
       }
       this.total = this.NodeStatusList.length
     },
@@ -262,7 +298,7 @@ export default {
       this.getNodeStatusList()
     },
     // change the current page
-    handleCurrentChange (newPage) {
+    handlePageChange (newPage) {
       this.queryInfo.pagenum = newPage
       this.getNodeStatusList()
     },
@@ -333,7 +369,7 @@ export default {
         res.data.Phases /= 10
       }
       this.selAllPhases = this.selPhases.length === 3
-      this.checkMode(this.settingForm.workmode)
+      this.checkNode(this.settingForm.workmode, this.settingForm.workStatus)
       this.settingDialogVisible = true
     },
 
@@ -352,13 +388,12 @@ export default {
           {
             id: this.settingForm.id,
             macADR: this.settingForm.macADR,
-            Phases: this.settingForm.Phases,
-            maxCur: this.settingForm.maxCur,
+            sPhases: this.settingForm.Phases,
+            smaxCur: this.settingForm.maxCur,
             workmode: this.settingForm.workmode,
             workStatus: this.settingForm.workStatus
           })
         this.settingDialogVisible = false
-        window.console.log(res)
         if (res.meta.status === 403) {
           return this.$message.warning('Please log in as admin to operate.')
         }
@@ -374,7 +409,10 @@ export default {
         this.getNodeStatusList()
       }, 3000)
     },
-    async pressButtonB (macADR, nodeName) {
+    async operaButton (macADR, nodeName, connection) {
+      if (!connection) {
+        return this.$message.error('No connection to the node')
+      }
       const { data: res } = await this.$http.put('nodes/buttonB', { macADR: macADR })
       if (res.meta.status === 403) {
         return this.$message.warning('Please log in as admin to operate.')
@@ -384,12 +422,11 @@ export default {
       }
       return this.$message.error('Failed to control The node ' + nodeName + '.')
     },
-    checkMode (workmode) {
-      if (workmode === 'manual') {
-        this.isAuto = false
-      } else {
-        this.isAuto = true
-      }
+
+    // Check the workStatus and workmode of node.
+    checkNode (workmode, workStatus) {
+      this.isAuto = workmode === 'auto'
+      this.isReady = workStatus < 70
     },
     handleSelAllPhases (val) {
       this.selPhases = val ? phasesOptions : []
@@ -402,7 +439,10 @@ export default {
       const property = column.property
       return row[property] === value
     },
-    async Blink (macADR, nodeName) {
+    async Blink (macADR, nodeName, connection) {
+      if (!connection) {
+        return this.$message.error('No connection to the node')
+      }
       const { data: res } = await this.$http.put('nodes/Blink', { macADR: macADR })
       if (res.meta.status === 403) {
         return this.$message.warning('Please log in as admin to operate.')
@@ -412,7 +452,10 @@ export default {
       }
       return this.$message.error('Failed to control The node ' + nodeName + '.')
     },
-    async noBlink (macADR, nodeName) {
+    async noBlink (macADR, nodeName, connection) {
+      if (!connection) {
+        return this.$message.error('No connection to the node')
+      }
       const { data: res } = await this.$http.put('nodes/noBlink', { macADR: macADR })
       if (res.meta.status === 403) {
         return this.$message.warning('Please log in as admin to operate.')
@@ -442,7 +485,7 @@ export default {
     clear: both
   }
   .box-card {
-    width: 95%;
+    width: 100%;
   }
   .clearfix /deep/ .el-button{
     float:right;

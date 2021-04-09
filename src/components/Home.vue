@@ -472,9 +472,9 @@ export default {
     .el-menu {
       border-right: none;
       width: 48px;
-      .el-menu-item {
+      /deep/ .el-menu-item {
       padding-left: 10px !important;
-      padding-right: 0px;
+      padding-right: 0px !important;
       }
       /deep/ .el-submenu__title {
       padding-left: 10px !important;
@@ -490,13 +490,15 @@ export default {
     background-color: #DCDFE6;
     .el-menu {
       border-right: none;
-      width: 160px;
       /deep/ .el-menu-item {
       padding-left: 10px !important;
-      min-width: 160px !important;
+      max-width: 160px !important;
+      min-width: 48px;
       }
       .el-submenu /deep/ .el-menu-item {
         padding-left: 12px !important;
+        max-width: 160px !important;
+        min-width: 48px;
       }
       /deep/ .el-submenu__title {
       padding-left: 10px !important;
