@@ -54,7 +54,7 @@
           </el-table-column>
           <el-table-column prop="ccss"
                            label="status"
-                           :filters="[{text: 'Off', value: 0 }, {text: 'charging', value: 3 }]"
+                           :filters="workStatusFilter"
                            :filter-method="filterHandler"
                            sortable
                            width="130">
@@ -255,7 +255,7 @@ export default {
   },
   created () {
     this.getNodeStatusList()
-    // this.keepAlive()
+    this.keepAlive()
   },
   methods: {
     // get the informationslist of mesh
@@ -485,7 +485,7 @@ export default {
     clear: both
   }
   .box-card {
-    width: 100%;
+    width: 95%;
   }
   .clearfix /deep/ .el-button{
     float:right;

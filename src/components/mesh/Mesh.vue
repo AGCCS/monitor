@@ -69,7 +69,7 @@ export default {
   },
   created () {
     this.getMeshInfo()
-    // this.keepAlive()
+    this.keepAlive()
   },
   methods: {
     // get the setting of mesh
@@ -97,6 +97,9 @@ export default {
           this.HomeData[0].totalCur3 += res2.data[i].Cur3
         }
       }
+      this.HomeData[0].totalCur1 = Number(this.HomeData[0].totalCur1.toString().match(/^\d+(?:\.\d{0,2})?/))
+      this.HomeData[0].totalCur2 = Number(this.HomeData[0].totalCur2.toString().match(/^\d+(?:\.\d{0,2})?/))
+      this.HomeData[0].totalCur3 = Number(this.HomeData[0].totalCur3.toString().match(/^\d+(?:\.\d{0,2})?/))
       this.HomeData[0].totalNum = this.totalNum
     },
     keepAlive () {

@@ -39,7 +39,7 @@
           <el-table-column type="index"
                            label="#"
                            sortable
-                           width="60">
+                           width="30">
           </el-table-column>
           <!-- <el-table-column prop="nodeName"
                            label="Name"
