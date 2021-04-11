@@ -379,7 +379,7 @@ export default {
             wholeMax: this.meshForm.wholeMax
           })
         this.meshDialogVisible = false
-        if (res.meta.status === 403) {
+        if (res.meta.status === 401) {
           return this.$message.warning('Please log in as admin to operate.')
         }
         if (res.meta.status === 500) {
@@ -406,7 +406,7 @@ export default {
         }
         const { data: res1 } = await this.$http.post('mesh/init')
         this.initConfirmVisible = false
-        if (res1.meta.status === 403) {
+        if (res1.meta.status === 401) {
           return this.$message.warning('Please log in as admin to operate.')
         }
         if (res1.meta.status !== 202) {
@@ -442,7 +442,7 @@ export default {
             subPassword: this.pwdForm.newPWD
           })
         this.createUserConfirmVisible = false
-        if (res.meta.status === 403) {
+        if (res.meta.status === 401) {
           return this.$message.warning('Please log in as admin to operate.')
         }
         if (res.meta.status === 500) {

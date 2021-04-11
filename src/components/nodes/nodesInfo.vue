@@ -414,7 +414,7 @@ export default {
       const { data: res } = await this.$http.put('nodes/list',
         { id: this.nameForm.id, nodeName: this.nameForm.nodeName })
       this.NameDialogVisible = false
-      if (res.meta.status === 403) {
+      if (res.meta.status === 401) {
         return this.$message.warning('Please log in as admin to operate.')
       }
       if (res.meta.status !== 202) {

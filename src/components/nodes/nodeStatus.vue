@@ -178,7 +178,7 @@
             <el-radio :label="'manual'" :disabled="!isReady">manual</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="Max current" prop="maxCur">
+        <el-form-item label="Max current" prop="smaxCur">
           <el-input v-model="settingForm.smaxCur" clearable maxlength="5" :disabled="isAuto">
             <template slot="append"><div style="width:0px">A</div></template>
           </el-input>
@@ -209,9 +209,9 @@ export default {
         if (!isNum.test(value)) {
           callback(new Error('please enter only numbers'))
         } else {
-          // if (value > this.settingForm.cmaxCur) {
-          //   callback(new Error('max current should be less than the safe current ' + this.settingForm.cmaxCur + ' A'))
-          // }
+          if (this.settingForm.cmaxCur >= 5 && value > this.settingForm.cmaxCur) {
+            callback(new Error('max current should be less than the safe current ' + this.settingForm.cmaxCur + ' A'))
+          }
           if (value <= 5) {
             callback(new Error('max current should be more than the 5 A'))
           }
@@ -235,6 +235,8 @@ export default {
       settingDialogVisible: false, // if the messagebox of edit setting of node is visible
       settingForm: {},
       settingFormRules: {
+        smaxCur: [
+          { validator: checkCurrentValue, trigger: 'blur' }],
         maxCur: [
           { validator: checkCurrentValue, trigger: 'blur' }]
       },
@@ -285,9 +287,11 @@ export default {
           default: workStatus = 'Fatal Err'; break
         }
         this.NodeStatusList[i].workStatus = workStatus
-        if (!this.NodeStatusList[i].connect) {
-          this.NodeStatusList.splice(i, 1)
-        }
+        // // remove node that is disconnected.
+        // if (!this.NodeStatusList[i].connect) {
+        //   this.NodeStatusList.splice(i, this.NodeStatusList.length-i)
+        //   break
+        // }
       }
       this.total = this.NodeStatusList.length
     },
@@ -312,7 +316,7 @@ export default {
           workmode: nodeInfo.workmode,
           workStatus: nodeInfo.workStatus
         })
-      if (res.meta.status === 403) {
+      if (res.meta.status === 401) {
         return this.$message.warning('Please log in as admin to operate.')
       }
       if (res.meta.status !== 202) {
@@ -342,7 +346,7 @@ export default {
       const { data: res } = await this.$http.put('nodes/list',
         { id: this.nameForm.id, nodeName: this.nameForm.nodeName })
       this.NameDialogVisible = false
-      if (res.meta.status === 403) {
+      if (res.meta.status === 401) {
         return this.$message.warning('Please log in as admin to operate.')
       }
       if (res.meta.status !== 202) {
@@ -361,7 +365,6 @@ export default {
       if (!res.data.connect) {
         return this.$message.error('No connection to the node')
       }
-      this.settingForm = res.data
       this.selPhases = []
       while (res.data.sPhases > 0) {
         this.selPhases.push(res.data.sPhases % 10)
@@ -369,6 +372,7 @@ export default {
         res.data.sPhases /= 10
       }
       this.selAllPhases = this.selPhases.length === 3
+      this.settingForm = res.data
       this.checkNode(this.settingForm.workmode, this.settingForm.workStatus)
       this.settingDialogVisible = true
     },
@@ -380,8 +384,9 @@ export default {
     async settingDialogConfirm () { // edit the setting of node and upload
       this.$refs.settingFormRef.validate(async valid => {
         if (!valid) return
-        this.settingForm.Phases = 0
+        this.settingForm.Phases = ''
         for (let i = 0; i < this.selPhases.length; i++) {
+          // this.settingForm.Phases += this.selPhases[i]
           this.settingForm.Phases = this.settingForm.Phases * 10 + this.selPhases[i]
         }
         const { data: res } = await this.$http.put('nodes/status',
@@ -394,11 +399,17 @@ export default {
             workStatus: this.settingForm.workStatus
           })
         this.settingDialogVisible = false
-        if (res.meta.status === 403) {
+        if (res.meta.status === 401) {
           return this.$message.warning('Please log in as admin to operate.')
         }
-        if (res.meta.status !== 202) {
-          return this.$message.error('Failed to change the setting of node！')
+        if (res.meta.status === 404) {
+          return this.$message.warning('Operation of unconnected nodes forbidden.')
+        }
+        if (res.meta.status === 406) {
+          return this.$message.error('No available current remain in all phases.')
+        }
+        if (res.meta.status === 402) {
+          return this.$message.warning('Please choose other phases and maxcur, cause no available current remain in given parameters.')
         }
         this.getNodeStatusList()
         return this.$message.success('The setting of the node has been successfully modified！')
@@ -414,7 +425,7 @@ export default {
         return this.$message.error('No connection to the node')
       }
       const { data: res } = await this.$http.put('nodes/buttonB', { macADR: macADR })
-      if (res.meta.status === 403) {
+      if (res.meta.status === 401) {
         return this.$message.warning('Please log in as admin to operate.')
       }
       if (res.meta.status === 200) {
@@ -426,7 +437,7 @@ export default {
     // Check the workStatus and workmode of node.
     checkNode (workmode, workStatus) {
       this.isAuto = workmode === 'auto'
-      this.isReady = workStatus < 70
+      this.isReady = workStatus < 60
     },
     handleSelAllPhases (val) {
       this.selPhases = val ? phasesOptions : []
@@ -444,7 +455,7 @@ export default {
         return this.$message.error('No connection to the node')
       }
       const { data: res } = await this.$http.put('nodes/Blink', { macADR: macADR })
-      if (res.meta.status === 403) {
+      if (res.meta.status === 401) {
         return this.$message.warning('Please log in as admin to operate.')
       }
       if (res.meta.status === 200) {
@@ -457,7 +468,7 @@ export default {
         return this.$message.error('No connection to the node')
       }
       const { data: res } = await this.$http.put('nodes/noBlink', { macADR: macADR })
-      if (res.meta.status === 403) {
+      if (res.meta.status === 401) {
         return this.$message.warning('Please log in as admin to operate.')
       }
       if (res.meta.status === 200) {
