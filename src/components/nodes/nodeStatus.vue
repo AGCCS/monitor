@@ -409,10 +409,22 @@ export default {
           return this.$message.error('No available current remain in all phases.')
         }
         if (res.meta.status === 402) {
-          return this.$message.warning('Please choose other phases and maxcur, cause no available current remain in given parameters.')
+          return this.$message.warning('Please choose other phases and maxcur, cause the given parameter exceeds the capacity of mesh.')
         }
         this.getNodeStatusList()
-        return this.$message.success('The setting of the node has been successfully modified！')
+        if (res.meta.status === 201) {
+          this.$message({
+            message: 'MaxCur has been adjusted to avoid exceeding capacity of mesh.',
+            offset: 30
+          })
+          return this.$message({
+            message: 'The setting of the node has been modified with adjusted parameter!',
+            offset: 70,
+            type: 'success'
+          })
+        } else if (res.meta.status === 200) {
+          return this.$message.success('The setting of the node has been successfully modified！')
+        }
       })
     },
     keepAlive () {
@@ -437,7 +449,7 @@ export default {
     // Check the workStatus and workmode of node.
     checkNode (workmode, workStatus) {
       this.isAuto = workmode === 'auto'
-      this.isReady = workStatus < 60
+      this.isReady = workStatus < 60 && workStatus >= 10
     },
     handleSelAllPhases (val) {
       this.selPhases = val ? phasesOptions : []
