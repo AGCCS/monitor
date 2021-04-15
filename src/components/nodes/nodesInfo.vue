@@ -26,7 +26,7 @@
       <!-- Table to show the details of nodes-->
       <template>
         <el-table :data="NodesInfoList.slice((this.queryInfo.pagenum-1)*this.queryInfo.pagesize,
-                          this.queryInfo.pagenum*this.queryInfo.pagesize)"
+                      this.queryInfo.pagenum*this.queryInfo.pagesize)"
                   border
                   stripe
                   style="width: 100%"
@@ -142,7 +142,7 @@
                  drag
                  :limit="1"
                  accept="application/octet-stream, *.bin"
-                 action="http://192.168.5.1:3000/api/upload/"
+                 :action="uploadURL"
                  :on-success="uploadSucceed"
                  :on-error="uploadErr"
                  :on-change="beforeUpload"
@@ -182,7 +182,8 @@
 
 <script>
 import printJS from 'print-js'
-// import mqtt from 'mqtt'
+import mqtt from 'mqtt'
+const { uploadURL, MQTT_CONF } = require('../../conf/configuration.js')
 export default {
   data () {
     return {
@@ -204,7 +205,8 @@ export default {
         index: -1
       },
       NameDialogVisible: false, // if the messagebox of changing name is visible
-      nameForm: {}
+      nameForm: {},
+      uploadURL: uploadURL
     }
   },
   created () {
@@ -292,10 +294,10 @@ export default {
           length++
         }
       }
-      // if (!length) {
-      //   this.firmwareDialogVisible = false
-      //   return this.$message.error('Please check the mesh. No node is connected!')
-      // }
+      if (!length) {
+        this.firmwareDialogVisible = false
+        return this.$message.error('Please check the mesh. No node is connected!')
+      }
       this.firmwareDialogVisible = true
     },
 
@@ -342,19 +344,20 @@ export default {
         fileList.pop()
         this.chooseNodeForm.index = -1
         this.$message.success('Node ' + nodeName + 'will download the firmware for AVR now.')
-        setTimeout(() => {
-          this.getNodesInfoList()
-        }, 5000)
-        // var client = mqtt.connect('ws://196.168.2.109:1884')
-        // client.subscribe('/DEMESH/' + this.chooseNodeForm.nodeList[index].macADR + '/acknowledge', { qos: 1 })
-        // client.on('message', function (topic, message) {
-        //   var mesJson = JSON.parse(message)
-        //   if (mesJson.mtype === 'avrota' && mesJson.state === 'running') {
-        //     this.$message.success('Node ' + nodeName +
-        //     'has successfully downloaded the firmware for AVR.')
-        //     this.getNodesInfoList()
-        //   }
-        // })
+        // setTimeout(() => {
+        //   this.getNodesInfoList()
+        // }, 5000)
+        var client = mqtt.connect(MQTT_CONF)
+        client.subscribe('/DEMESH/' + this.chooseNodeForm.nodeList[index].macADR + '/acknowledge', { qos: 1 })
+        client.on('message', function (topic, message) {
+          var mesJson = JSON.parse(message)
+          if (mesJson.mtype === 'avrota' && mesJson.state === 'running') {
+            this.$message.success('Node ' + nodeName +
+            'has successfully downloaded the firmware for AVR.')
+            this.getNodesInfoList()
+            client.end()
+          }
+        })
       }
     },
     uploadErr () {
@@ -367,12 +370,11 @@ export default {
         return false
       }
       if (this.firmwareForm.Board === 'ESP32') {
-        // if (file.name.search(this.firmwareForm.Board) < 0) {
-        if (file.name.search('m5stick') < 0) {
-          fileList.pop()
-          this.$message.warning('File name should contain "' + 'm5stick' + '".')
-          return false
-        }
+        // if (file.name.search('m5stick') < 0) {
+        //   fileList.pop()
+        //   this.$message.warning('File name should contain "' + 'm5stick' + '".')
+        //   return false
+        // }
         if (file.name.search('demesh_') < 0) {
           fileList.pop()
           this.$message.warning('File name should contain "demesh".')
@@ -450,7 +452,7 @@ export default {
     clear: both
   }
   .box-card {
-    width: 92%;
+    width: 95%;
   }
   .clearfix /deep/ .el-button{
     float:right;

@@ -84,23 +84,25 @@ export default {
       if (res2.meta.status !== 200) {
         return this.$message.error('Failed to receive the status of nodes')
       }
-      this.totalNum = res2.data.length
+      this.HomeData[0].totalNum = 0
       this.HomeData[0].activeNum = 0
       this.HomeData[0].totalCur1 = 0
       this.HomeData[0].totalCur2 = 0
       this.HomeData[0].totalCur3 = 0
       for (var i = 0; i < res2.data.length; i++) {
-        if (res2.data[i].connect && res2.data[i].workStatus >= 10 && res2.data[i].workStatus < 60) {
-          this.HomeData[0].activeNum++
-          this.HomeData[0].totalCur1 += res2.data[i].Cur1
-          this.HomeData[0].totalCur2 += res2.data[i].Cur2
-          this.HomeData[0].totalCur3 += res2.data[i].Cur3
+        if (res2.data[i].connect) {
+          this.HomeData[0].totalNum++
+          if (res2.data[i].workStatus >= 10 && res2.data[i].workStatus < 60) {
+            this.HomeData[0].activeNum++
+            this.HomeData[0].totalCur1 += res2.data[i].Cur1
+            this.HomeData[0].totalCur2 += res2.data[i].Cur2
+            this.HomeData[0].totalCur3 += res2.data[i].Cur3
+          }
         }
       }
       this.HomeData[0].totalCur1 = Number(this.HomeData[0].totalCur1.toString().match(/^\d+(?:\.\d{0,2})?/))
       this.HomeData[0].totalCur2 = Number(this.HomeData[0].totalCur2.toString().match(/^\d+(?:\.\d{0,2})?/))
       this.HomeData[0].totalCur3 = Number(this.HomeData[0].totalCur3.toString().match(/^\d+(?:\.\d{0,2})?/))
-      this.HomeData[0].totalNum = this.totalNum
     },
     keepAlive () {
       setInterval(() => {

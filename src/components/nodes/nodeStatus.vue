@@ -200,7 +200,9 @@
 </template>
 
 <script>
+// import mqtt from 'mqtt'
 const phasesOptions = [1, 2, 3]
+// const { MQTT_CONF } = require('../../conf/configuration.js')
 export default {
   data () {
     var checkCurrentValue = (rule, value, callback) => {
