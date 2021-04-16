@@ -30,7 +30,6 @@ import {
   Link,
   Checkbox,
   CheckboxGroup,
-  Backtop,
   Upload
 } from 'element-ui'
 import lang from 'element-ui/lib/locale/lang/en'
@@ -66,6 +65,5 @@ Vue.use(RadioGroup)
 Vue.use(Link)
 Vue.use(Checkbox)
 Vue.use(CheckboxGroup)
-Vue.use(Backtop)
 Vue.use(Upload)
 Vue.prototype.$message = Message

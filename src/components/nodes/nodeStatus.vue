@@ -195,14 +195,11 @@
         <el-button type="primary" @click="settingDialogConfirm">save</el-button>
       </span>
     </el-dialog>
-    <!-- <el-backtop target=".page-component__scroll .el-scrollbar__wrap"></el-backtop> -->
   </div>
 </template>
 
 <script>
-// import mqtt from 'mqtt'
 const phasesOptions = [1, 2, 3]
-// const { MQTT_CONF } = require('../../conf/configuration.js')
 export default {
   data () {
     var checkCurrentValue = (rule, value, callback) => {
@@ -289,11 +286,6 @@ export default {
           default: workStatus = 'Fatal Err'; break
         }
         this.NodeStatusList[i].workStatus = workStatus
-        // // remove node that is disconnected.
-        // if (!this.NodeStatusList[i].connect) {
-        //   this.NodeStatusList.splice(i, this.NodeStatusList.length-i)
-        //   break
-        // }
       }
       this.total = this.NodeStatusList.length
     },

@@ -343,18 +343,16 @@ export default {
         }
         fileList.pop()
         this.chooseNodeForm.index = -1
-        this.$message.success('Node ' + nodeName + 'will download the firmware for AVR now.')
-        // setTimeout(() => {
-        //   this.getNodesInfoList()
-        // }, 5000)
+        this.$message.success('Node ' + nodeName + ' will download the firmware for AVR now.')
+        const getList = this.getNodesInfoList
+        const succeed = this.$message.success
         var client = mqtt.connect(MQTT_CONF)
         client.subscribe('/DEMESH/' + this.chooseNodeForm.nodeList[index].macADR + '/acknowledge', { qos: 1 })
-        client.on('message', function (topic, message) {
-          var mesJson = JSON.parse(message)
+        client.on('message', function (topic, msg) {
+          var mesJson = JSON.parse(msg)
           if (mesJson.mtype === 'avrota' && mesJson.state === 'running') {
-            this.$message.success('Node ' + nodeName +
-            'has successfully downloaded the firmware for AVR.')
-            this.getNodesInfoList()
+            succeed('Node ' + nodeName + ' has successfully downloaded the firmware for AVR.')
+            getList()
             client.end()
           }
         })
