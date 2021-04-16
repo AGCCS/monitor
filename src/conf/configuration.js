@@ -14,8 +14,8 @@ if (env === 'production') {
   MQTT_CONF = 'mqtt:192.168.5.1:9001'
   baseURL = 'http://192.168.5.1:3000/api/'
   uploadURL = 'http://192.168.5.1:3000/api/upload/'
-  defaultUser = ''
-  defaultPwd = ''
+  defaultUser = 'admin'
+  defaultPwd = '123456'
 }
 
 module.exports = {
