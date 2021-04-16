@@ -29,13 +29,14 @@
 </template>
 
 <script>
+import { defaultPwd, defaultUser } from '../conf/configuration'
 export default {
   data () {
     return {
       // data for log in
       loginForm: {
-        username: 'admin',
-        password: '123456'
+        username: defaultUser,
+        password: defaultPwd
       },
       // rules for log in
       loginRules: {
