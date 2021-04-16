@@ -5,7 +5,7 @@ This programm aims to develop a web user interface for the Combined Charging Sys
 The whole work is developed based on Vue.js and uses Element UI as the UI toolkit.
 
 ### Instruction of functions
-This userinterface start with a Login interface. In order to simplify the login process and facilitate testing, the default username 'admin' and its password '123456' is provided to simplify the login process. After successful login, you will enter the default interface 'Mesh Monitor'， which is the console of the whole mesh. On its left side stands a sidemenu as the main navigation.
+This userinterface start with a Login interface. In order to simplify the login process and facilitate testing in development process, the default username 'admin' and its password '123456' is provided to simplify the login process . After successful login, you will enter the default interface 'Mesh Monitor'， which is the console of the whole mesh. On its left side stands a sidemenu as the main navigation.
 
 The sidemenu has now 4 submenus, 'mesh', 'nodes', 'user' and 'setting'. Every submenu except 'mesh' has 2 options. The sidemenu is collapsed by default. People can use the option '>>>' to expand it, which is on the top of sidemenu. When people have selected the submenu of one console, the expanded sidemenu will be collapsed.
 
