@@ -7,6 +7,8 @@ The whole work is developed based on Vue.js and uses Element UI as the UI toolki
 ### Instruction of functions
 This userinterface start with a Login interface. In order to simplify the login process and facilitate testing in development process, the default username 'admin' and its password '123456' is provided to simplify the login process . After successful login, you will enter the default interface 'Mesh Monitor'， which is the console of the whole mesh. On its left side stands a sidebar as the main navigation.
 
+<img src="./images/sidebar.png" alt="Sidebar Detail" width=15%> <img src="./images/console.png" alt="Console" width=55%>
+
 The sidebar has now 4 submenus, 'mesh', 'nodes', 'user' and 'setting'. Every submenu except 'mesh' has 2 options. The sidemenu is collapsed by default. People can use the option '>>>' to expand it, which is on the top of sidemenu. When people have selected the submenu of one console, the expanded sidemenu will be collapsed.
 
 The submenu 'mesh' will lead u to the main console 'Mesh Monitor' mentioned before. The 'Mesh Monitor' shows only the data of the whole mesh, which includes the total number of connected nodes, the number of active nodes, the value of total used current in 3 phases and the maximum current that the whole mesh could supply.
