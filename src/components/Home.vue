@@ -194,7 +194,7 @@
             </span>
           </el-dialog>
           <div style="color: #E6A23C; margin-bottom:5%">Please enter your username and password to create a subuser.</div>
-          <el-form :model="pwdForm" :rules="pwdFormRules" ref="adminCheckRef" label-width="100px" class="pwdForm" status-icon:true>
+          <el-form :model="pwdForm" :rules="pwdFormRules" ref="loginCheckRef" label-width="100px" class="pwdForm" status-icon:true>
                 <el-form-item label="username" prop="username">
                   <el-input v-model="pwdForm.username"></el-input>
                 </el-form-item>
@@ -204,7 +204,7 @@
           </el-form>
           <span slot="footer" class="dialog-footer">
             <el-button @click="createUserVisible = false">cancel</el-button>
-            <el-button type="primary" @click="adminCheck">confirm</el-button>
+            <el-button type="primary" @click="loginCheck">confirm</el-button>
           </span>
         </el-dialog>
 
@@ -347,13 +347,13 @@ export default {
             password: this.pwdForm.password,
             newPassword: this.pwdForm.newPWD
           })
-        if (res.meta.status === 422) {
-          return this.$message.error('wrong user information')
+        if (res.meta.status === 400) {
+          return this.$message.error('Wrong user information')
         }
         // this.$refs.pwdFormRef.resetFields()
         this.pwdDialogVisible = false
         if (res.meta.status === 500) {
-          return this.$message.error('failed to change the password')
+          return this.$message.error('Failed to change the password')
         }
         this.$message.success('The password has been successfully modified！')
       })
@@ -374,7 +374,7 @@ export default {
     async meshDialogConfirm () {
       this.$refs.meshFormRef.validate(async valid => {
         if (!valid) return
-        const { data: res } = await this.$http.post('mesh/setting',
+        const { data: res } = await this.$http.put('mesh/setting',
           {
             wholeMax: this.meshForm.wholeMax
           })
@@ -404,22 +404,22 @@ export default {
         if (res.meta.status === 400) {
           return this.$message.error('Wrong user information!')
         }
-        const { data: res1 } = await this.$http.post('mesh/init')
+        const { data: res1 } = await this.$http.delete('mesh/init')
         this.initConfirmVisible = false
         if (res1.meta.status === 401) {
           return this.$message.warning('Please log in as admin to operate.')
         }
         if (res1.meta.status !== 202) {
-          return this.$message.error('Failed to initialize the mesh!')
+          return this.$message.error('Failed to initialize the mesh or it is intialized!')
         }
         this.$message.success('The mesh has been successfully initialized!')
       })
     },
     createUserClosed () {
-      this.$refs.adminCheckRef.resetFields()
+      this.$refs.loginCheckRef.resetFields()
     },
-    async adminCheck () {
-      this.$refs.adminCheckRef.validate(async valid => {
+    async loginCheck () {
+      this.$refs.loginCheckRef.validate(async valid => {
         if (!valid) return
         const { data: res } = await this.$http.post('users/login',
           {

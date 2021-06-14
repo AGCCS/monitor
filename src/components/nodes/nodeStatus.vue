@@ -10,7 +10,7 @@
     <el-card class="box-card">
       <div slot="header" class="clearfix">
         <el-row>
-          <el-col :span="10">Status of nodes</el-col>
+          <el-col :span="10">Nodes Status</el-col>
           <el-col :span="6" :offset="8">
           </el-col>
         </el-row>
@@ -102,7 +102,7 @@
               </el-tooltip>
 
               <!-- press the operation Button, only for test -->
-              <el-tooltip effect="dark" content="button B" placement="top">
+              <el-tooltip effect="dark" content="OP Button" placement="top">
                 <el-button type="primary"
                            icon="el-icon-video-play"
                            size="mini"
