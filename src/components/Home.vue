@@ -409,7 +409,7 @@ export default {
         if (res1.meta.status === 401) {
           return this.$message.warning('Please log in as admin to operate.')
         }
-        if (res1.meta.status !== 202) {
+        if (res1.meta.status !== 204) {
           return this.$message.error('Failed to initialize the mesh or it is intialized!')
         }
         this.$message.success('The mesh has been successfully initialized!')

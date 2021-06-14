@@ -402,7 +402,7 @@ export default {
         if (res.meta.status === 406) {
           return this.$message.error('No available current remain in all phases.')
         }
-        if (res.meta.status === 402) {
+        if (res.meta.status === 400) {
           return this.$message.warning('Please choose other phases and maxcur, cause the given parameter exceeds the capacity of mesh.')
         }
         this.getNodeStatusList()
