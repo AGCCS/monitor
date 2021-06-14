@@ -143,6 +143,7 @@
                  :limit="1"
                  accept="application/octet-stream, *.bin"
                  :action="uploadURL"
+                 :headers="uploadHeaders"
                  :on-success="uploadSucceed"
                  :on-error="uploadErr"
                  :on-change="beforeUpload"
@@ -206,7 +207,8 @@ export default {
       },
       NameDialogVisible: false, // if the messagebox of changing name is visible
       nameForm: {},
-      uploadURL: uploadURL
+      uploadURL: uploadURL,
+      uploadHeaders: { authorization: sessionStorage.getItem('token') }
     }
   },
   created () {
