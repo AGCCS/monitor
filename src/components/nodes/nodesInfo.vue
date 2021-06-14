@@ -326,7 +326,7 @@ export default {
             Board: Board,
             Version: Version
           })
-        if (result.meta.status !== 202) {
+        if (result.meta.status !== 201) {
           this.$message.error('ESP32 cannot download the firmware!')
         }
         fileList.pop()
