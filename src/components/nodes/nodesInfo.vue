@@ -340,7 +340,7 @@ export default {
             macADR: this.chooseNodeForm.nodeList[index].macADR,
             macAddress: this.chooseNodeForm.nodeList[index].macAddress
           })
-        if (result.meta.status !== 202) {
+        if (result.meta.status !== 201) {
           this.$message.error('Node ' + nodeName + ' cannot download the firmware for AVR!')
         }
         fileList.pop()

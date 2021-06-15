@@ -251,11 +251,17 @@ export default {
         { text: 'Charging', value: 3 },
         { text: 'Pause', value: 4 },
         { text: 'Wait Power', value: 5 },
-        { text: 'Err', value: 9 }]
+        { text: 'Err', value: 9 }],
+      listener: null
     }
+  },
+  beforeDestroy () {
+    window.clearInterval(this.listener)
   },
   created () {
     this.getNodeStatusList()
+  },
+  mounted () {
     this.keepAlive()
   },
   methods: {
@@ -422,9 +428,18 @@ export default {
       })
     },
     keepAlive () {
-      setInterval(() => {
+      this.listener = setInterval(() => {
         this.getNodeStatusList()
       }, 3000)
+    },
+    stopAlive (event) {
+      event = event || window.event
+      if (event) {
+        clearInterval(this.listener)
+        window.console.log('stopevent' + this.listener)
+      }
+      clearInterval(this.listener)
+      window.console.log('stop' + this.listener)
     },
     async operaButton (macADR, nodeName, connection) {
       if (!connection) {

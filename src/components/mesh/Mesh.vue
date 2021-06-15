@@ -64,11 +64,17 @@ export default {
         maxCurrentValue: 0,
         safeCurrentValue: 0,
         averageMax: 0
-      }]
+      }],
+      listener: null
     }
+  },
+  beforeDestroy () {
+    window.clearInterval(this.listener)
   },
   created () {
     this.getMeshInfo()
+  },
+  mounted () {
     this.keepAlive()
   },
   methods: {
@@ -105,7 +111,7 @@ export default {
       this.HomeData[0].totalCur3 = Number(this.HomeData[0].totalCur3.toString().match(/^\d+(?:\.\d{0,2})?/))
     },
     keepAlive () {
-      setInterval(() => {
+      this.listener = setInterval(() => {
         this.getMeshInfo()
       }, 3000)
     }
