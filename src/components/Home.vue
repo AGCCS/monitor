@@ -273,7 +273,7 @@ export default {
         newPWD: [
           { required: true, message: 'please enter the new password', trigger: 'blur' },
           {
-            max: 6,
+            min: 6,
             message: 'Password length must be at least 6 digits',
             trigger: 'blur'
           }],
@@ -281,14 +281,14 @@ export default {
           { validator: validatePass, trigger: 'blur' },
           { required: true, message: 'please confirm the new password', trigger: 'blur' },
           {
-            max: 6,
+            min: 6,
             message: 'Password length must be at least 6 digits',
             trigger: 'blur'
           }],
         subUsername: [
           { required: true, message: 'please enter the subusername', trigger: 'blur' },
           {
-            max: 3,
+            min: 3,
             message: 'Username length must be at least 3 digits',
             trigger: 'blur'
           }]
