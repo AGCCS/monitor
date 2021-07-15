@@ -28,6 +28,7 @@
                            width="30">
           </el-table-column>
           <el-table-column label="name"
+                           prop="nodeName"
                            sortable
                            width="150">
             <template slot-scope="scope">
